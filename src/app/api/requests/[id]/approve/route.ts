@@ -92,8 +92,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // 2. メールの送信処理 (トランザクション完了後)
     // ホストヘッダーから基準URLを取得（環境変数に頼らない方法）
-    const headersList = headers();
-    const host = headersList.get('host');
+    const host = headers().get('host');
     console.log('DEBUG: Approve route host header:', host);
     const protocol = host?.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;

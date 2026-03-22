@@ -116,7 +116,7 @@ export async function POST(request: Request) {
       for (const step of flow) {
         await tx.approvalStep.create({
           data: {
-            requestId: request.id,
+            requestId: newRequest.id,
             approverEmail: step.email,
             stepOrder: step.order,
           },
