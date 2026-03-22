@@ -99,7 +99,7 @@ export async function POST(request: Request) {
     }
 
     const newRequest = await prisma.$transaction(async (tx: any) => {
-      const request = await tx.request.create({
+      const createdRequest = await tx.request.create({
         data: {
           type,
           title,
@@ -116,14 +116,14 @@ export async function POST(request: Request) {
       for (const step of flow) {
         await tx.approvalStep.create({
           data: {
-            requestId: newRequest.id,
+            requestId: createdRequest.id,
             approverEmail: step.email,
             stepOrder: step.order,
           },
         });
       }
 
-      return request;
+      return createdRequest;
     });
 
     // 最初のステップ (order === 1) の全員へ通知
