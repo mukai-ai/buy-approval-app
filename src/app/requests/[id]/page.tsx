@@ -1,9 +1,8 @@
-import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import styles from "../../requests.module.css";
 import Link from "next/link";
-import ActionButtons from "./ActionButtons";
+import ApprovalActionButtons from "./ApprovalActionButtons";
 import RequestActions from "./RequestActions";
 import { notFound } from "next/navigation";
 
@@ -140,7 +139,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
       ))}
 
       {isCurrentApprover && reqData.status === "PENDING" && (
-        <ActionButtons requestId={reqData.id} />
+        <ApprovalActionButtons requestId={reqData.id} />
       )}
 
       <div style={{ marginTop: "2rem" }}>
