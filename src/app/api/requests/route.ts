@@ -117,7 +117,11 @@ export async function POST(req: Request) {
 
     // 最初のステップ (order === 1) の全員へ通知
     const firstApprovers = flow.filter(s => s.order === 1);
-    const url = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/requests/${newRequest.id}`;
+    // ホストヘッダーから基準URLを取得（環境変数に頼らない方法）
+    const host = req.headers.get('host');
+    const protocol = host?.includes('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
+    const url = `${baseUrl}/requests/${newRequest.id}`;
     
     for (const approver of firstApprovers) {
       await sendNotificationEmail(

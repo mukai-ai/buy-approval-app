@@ -89,7 +89,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
 
     // 2. メールの送信処理 (トランザクション完了後)
-    const url = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/requests/${requestId}`;
+    // ホストヘッダーから基準URLを取得（環境変数に頼らない方法）
+    const host = request.headers.get('host');
+    const protocol = host?.includes('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
+    const url = `${baseUrl}/requests/${requestId}`;
 
     if (isRequestRejected) {
       await sendNotificationEmail(
