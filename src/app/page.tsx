@@ -71,7 +71,10 @@ export default function HomePage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>ダッシュボード</h1>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem" }}>
+          <h1 className={styles.title}>ダッシュボード</h1>
+          <span style={{ fontSize: "0.75rem", color: "#94a3b8", paddingBottom: "3px" }}>v1.1</span>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <span>{session?.user?.email}</span>
           <button className={styles.buttonOutline} onClick={() => router.push("/requests/new")}>

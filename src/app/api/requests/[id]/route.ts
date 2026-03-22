@@ -6,6 +6,8 @@ import { unlink } from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
 
+export const dynamic = 'force-dynamic';
+
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
