@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import styles from "../../requests.module.css";
 import Link from "next/link";
 
 export default function NewRequestPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState("BUY"); // "BUY" or "REFORM"
   const [title, setTitle] = useState("");
@@ -16,6 +17,19 @@ export default function NewRequestPage() {
   const [endDate, setEndDate] = useState("");
   const [attachmentLink, setAttachmentLink] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    // 再申請（コピー）時のパラメータ読み込み
+    const copyId = searchParams.get("copy");
+    if (copyId) {
+      setType(searchParams.get("type") || "BUY");
+      setTitle(`${searchParams.get("title")}（再申請）`);
+      const amt = searchParams.get("amount");
+      if (amt) setAmount(Number(amt));
+      setCompanyName(searchParams.get("companyName") || "");
+      setAttachmentLink(searchParams.get("attachmentLink") || "");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

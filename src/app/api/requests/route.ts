@@ -27,7 +27,16 @@ export async function GET() {
     orderBy: { createdAt: 'desc' },
   });
 
-  return NextResponse.json({ myRequests, pendingApprovals });
+  const pastApprovals = await prisma.approvalStep.findMany({
+    where: { 
+      approverEmail: email, 
+      status: { in: ['APPROVED', 'REJECTED'] } 
+    },
+    include: { request: true },
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  return NextResponse.json({ myRequests, pendingApprovals, pastApprovals });
 }
 
 export async function POST(request: Request) {

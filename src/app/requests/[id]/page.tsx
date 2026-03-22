@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import styles from "../../requests.module.css";
 import Link from "next/link";
 import ActionButtons from "./ActionButtons";
+import RequestActions from "./RequestActions";
 import { notFound } from "next/navigation";
 
 export default async function RequestDetailPage({ params }: { params: { id: string } }) {
@@ -28,6 +29,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
 
   const currentPendingStep = reqData.approvalSteps.find((s: any) => s.status === "PENDING");
   const isCurrentApprover = currentPendingStep?.approverEmail === session.user.email;
+  const isApplicant = reqData.applicantEmail === session.user.email;
 
   const getStatusLabel = (s: string) => {
     if (s === "APPROVED") return "承認済";
@@ -42,6 +44,10 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
         <div className={styles.detailRow}>
           <div className={styles.detailLabel}>申請者:</div>
           <div className={styles.detailValue}>{reqData.applicantEmail}</div>
+        </div>
+        <div className={styles.detailRow}>
+          <div className={styles.detailLabel}>日付:</div>
+          <div className={styles.detailValue}>{new Date(reqData.createdAt).toLocaleString()}</div>
         </div>
         <div className={styles.detailRow}>
           <div className={styles.detailLabel}>申請区分:</div>
@@ -100,16 +106,30 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             </strong>
           </div>
         </div>
+
+        <RequestActions 
+          requestId={reqData.id} 
+          isApplicant={isApplicant} 
+          isRejected={reqData.status === "REJECTED"}
+          requestData={reqData}
+        />
       </div>
 
-      <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>承認フロー・状況</h2>
+      <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem", marginTop: "2rem" }}>承認フロー・状況（履歴）</h2>
       {reqData.approvalSteps.map((step: any) => (
         <div key={step.id} className={`${styles.stepCard} ${step.status === "APPROVED" ? styles.stepCardApproved : step.status === "REJECTED" ? styles.stepCardRejected : styles.stepCardPending}`}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
             <span style={{ fontWeight: "600", color: "#334155" }}>STEP {step.stepOrder} - {step.approverEmail}</span>
-            <span style={{ fontSize: "0.875rem", fontWeight: "bold", color: step.status === "APPROVED" ? "#10b981" : step.status === "REJECTED" ? "#ef4444" : "#eab308" }}>
-              {getStatusLabel(step.status)}
-            </span>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "0.875rem", fontWeight: "bold", color: step.status === "APPROVED" ? "#10b981" : step.status === "REJECTED" ? "#ef4444" : "#eab308" }}>
+                {getStatusLabel(step.status)}
+              </div>
+              {step.status !== "PENDING" && (
+                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                  {new Date(step.updatedAt).toLocaleString()}
+                </div>
+              )}
+            </div>
           </div>
           {step.comment && (
             <div style={{ padding: "0.5rem", background: "#f1f5f9", borderRadius: "4px", fontSize: "0.875rem", color: "#475569" }}>

@@ -11,6 +11,7 @@ type RequestType = {
   title: string;
   amount: number;
   status: string;
+  applicantEmail: string;
   createdAt: string;
 };
 
@@ -25,6 +26,7 @@ export default function HomePage() {
   const router = useRouter();
   const [myRequests, setMyRequests] = useState<RequestType[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<ApprovalStepType[]>([]);
+  const [pastApprovals, setPastApprovals] = useState<ApprovalStepType[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,6 +36,7 @@ export default function HomePage() {
         .then((data) => {
           setMyRequests(data.myRequests || []);
           setPendingApprovals(data.pendingApprovals || []);
+          setPastApprovals(data.pastApprovals || []);
           setLoading(false);
         });
     }
@@ -82,33 +85,64 @@ export default function HomePage() {
 
       <div className={styles.dashboardGrid}>
         <div>
-          <h2 className={styles.sectionTitle}>承認依頼（要対応）</h2>
-          {pendingApprovals.length === 0 ? (
-            <p style={{ color: "#64748b" }}>現在、対応が必要な承認はありません。</p>
-          ) : (
-            pendingApprovals.map((step) => (
-              <div
-                key={step.id}
-                className={styles.card}
-                onClick={() => router.push(`/requests/${step.request.id}`)}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                  <span className={`${styles.statusBadge} ${styles.statusPending}`}>確認待ち</span>
-                  <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "bold" }}>
-                    {step.request.type === "BUY" ? "買付承認" : "リフォーム承認"}
-                  </span>
+          <section style={{ marginBottom: "2.5rem" }}>
+            <h2 className={styles.sectionTitle}>承認依頼（要対応）</h2>
+            {pendingApprovals.length === 0 ? (
+              <p style={{ color: "#64748b" }}>現在、対応が必要な承認はありません。</p>
+            ) : (
+              pendingApprovals.map((step) => (
+                <div
+                  key={step.id}
+                  className={styles.card}
+                  onClick={() => router.push(`/requests/${step.request.id}`)}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                    <span className={`${styles.statusBadge} ${styles.statusPending}`}>確認待ち</span>
+                    <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "bold" }}>
+                      {step.request.type === "BUY" ? "買付承認" : "リフォーム承認"}
+                    </span>
+                  </div>
+                  <h3 className={styles.cardTitle}>{step.request.title}</h3>
+                  <div className={styles.cardMeta}>
+                    <span>日付: {new Date(step.request.createdAt).toLocaleDateString()}</span>
+                  </div>
                 </div>
-                <h3 className={styles.cardTitle}>{step.request.title}</h3>
-                <div className={styles.cardMeta}>
-                  <span>日付: {new Date(step.request.createdAt).toLocaleDateString()}</span>
+              ))
+            )}
+          </section>
+
+          <section>
+            <h2 className={styles.sectionTitle}>過去の承認履歴</h2>
+            {pastApprovals.length === 0 ? (
+              <p style={{ color: "#64748b" }}>過去の承認履歴はありません。</p>
+            ) : (
+              pastApprovals.map((step) => (
+                <div
+                  key={step.id}
+                  className={styles.card}
+                  onClick={() => router.push(`/requests/${step.request.id}`)}
+                  style={{ opacity: 0.8, borderLeftColor: step.status === "APPROVED" ? "#10b981" : "#ef4444" }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                    <span className={`${styles.statusBadge} ${step.status === "APPROVED" ? styles.statusApproved : styles.statusRejected}`}>
+                      {step.status === "APPROVED" ? "承認済" : "却下"}
+                    </span>
+                    <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "bold" }}>
+                      {step.request.type === "BUY" ? "買付承認" : "リフォーム承認"}
+                    </span>
+                  </div>
+                  <h3 className={styles.cardTitle}>{step.request.title}</h3>
+                  <div className={styles.cardMeta}>
+                    <span>申請者: {step.request.applicantEmail}</span>
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </section>
         </div>
 
         <div>
-          <h2 className={styles.sectionTitle}>申請履歴</h2>
+          <h2 className={styles.sectionTitle}>自分の申請状況</h2>
           {myRequests.length === 0 ? (
             <p style={{ color: "#64748b" }}>まだ申請履歴がありません。</p>
           ) : (
