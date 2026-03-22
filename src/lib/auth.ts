@@ -13,11 +13,13 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user }) {
+      console.log("Login attempt by:", user.email);
       // 特定の社内ドメインのみログインを許可する（社内専用運用のため）
-      if (user.email && user.email.endsWith("@tokyomf.co.jp")) {
+      if (user.email && user.email.toLowerCase().endsWith("@tokyomf.co.jp")) {
         return true;
       }
       // それ以外のGoogleアカウントはアクセスブロック
+      console.log("Access blocked for:", user.email);
       return false;
     },
     async session({ session, user }) {
