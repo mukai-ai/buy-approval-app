@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
@@ -90,7 +91,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // 2. メールの送信処理 (トランザクション完了後)
     // ホストヘッダーから基準URLを取得（環境変数に頼らない方法）
-    const host = request.headers.get('host');
+    const headersList = headers();
+    const host = headersList.get('host');
+    console.log('DEBUG: Approve route host header:', host);
     const protocol = host?.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
     const url = `${baseUrl}/requests/${requestId}`;

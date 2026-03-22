@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { headers } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
@@ -118,7 +119,9 @@ export async function POST(request: Request) {
     // 最初のステップ (order === 1) の全員へ通知
     const firstApprovers = flow.filter(s => s.order === 1);
     // ホストヘッダーから基準URLを取得（環境変数に頼らない方法）
-    const host = request.headers.get('host');
+    const headersList = headers();
+    const host = headersList.get('host');
+    console.log('DEBUG: API route host header:', host);
     const protocol = host?.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
     const url = `${baseUrl}/requests/${newRequest.id}`;
