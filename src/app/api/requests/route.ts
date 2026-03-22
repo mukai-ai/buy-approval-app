@@ -123,7 +123,9 @@ export async function POST(req: Request) {
       await sendNotificationEmail(
         approver.email,
         `【承認依頼】${title}`,
-        `新しい申請が行われました。\n申請区分: ${type === 'BUY' ? '買付' : 'リフォーム'}\n申請者: ${session.user.email}\n金額: ${amount.toLocaleString()}円\nURL: ${url}`
+        `新しい申請が行われました。\n申請区分: ${type === 'BUY' ? '買付' : 'リフォーム'}\n申請者: ${session.user.email}\n金額: ${amount.toLocaleString()}円\nURL: ${url}`,
+        session.user.name || session.user.email || undefined,
+        session.user.email || undefined
       );
     }
 

@@ -95,13 +95,17 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       await sendNotificationEmail(
         request.applicantEmail,
         `【買付/リフォーム承認：却下】${request.title}`,
-        `申請が却下されました。\n却下者: ${email}\n理由: ${comment || 'なし'}\nURL: ${url}`
+        `申請が却下されました。\n却下者: ${email}\n理由: ${comment || 'なし'}\nURL: ${url}`,
+        session.user.name || email || undefined,
+        email || undefined
       );
     } else if (isRequestApproved) {
       await sendNotificationEmail(
         request.applicantEmail,
         `【買付/リフォーム承認：完了】${request.title}`,
-        `申請がすべての承認者により承認されました。\nURL: ${url}`
+        `申請がすべての承認者により承認されました。\nURL: ${url}`,
+        session.user.name || email || undefined,
+        email || undefined
       );
     } else if (nextApprovers.length > 0) {
       // 次の承認者へ並行してメール送信
@@ -109,7 +113,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         await sendNotificationEmail(
           approverEmail,
           `【承認依頼】${request.title}`,
-          `前のステップの承認が完了し、あなたの承認待ちとなりました。\n最終コメント: ${comment || 'なし'}\nURL: ${url}`
+          `前のステップの承認が完了し、あなたの承認待ちとなりました。\n最終コメント: ${comment || 'なし'}\nURL: ${url}`,
+          session.user.name || email || undefined,
+          email || undefined
         );
       }
     }
