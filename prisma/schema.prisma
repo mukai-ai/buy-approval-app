@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth用モデル
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  requests      Request[] // 自分が行った申請
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// 買付承認アプリ用モデル
+model Request {
+  id             String         @id @default(cuid())
+  type           String         @default("BUY") // "BUY" or "REFORM"
+  title          String
+  amount         Float          @default(0) // 具体的な申請金額
+  companyName    String?        // 業者名（リフォーム）
+  startDate      DateTime?      // 着工日（リフォーム）
+  endDate        DateTime?      // 完了日（リフォーム）
+  attachmentLink String?        // 手動入力のリンク
+  attachmentFile String?        // アップロードファイルの保存パス
+  applicantEmail String
+  status         String         @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  applicant      User           @relation(fields: [applicantEmail], references: [email], onDelete: Cascade)
+  approvalSteps  ApprovalStep[]
+}
+
+model ApprovalStep {
+  id            String   @id @default(cuid())
+  requestId     String
+  approverEmail String
+  stepOrder     Int      // 1, 2, 3 ...
+  status        String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  comment       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  request       Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, stepOrder])
+}

@@ -1,0 +1,114 @@
+.container {
+  max-width: 800px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  font-family: 'Inter', sans-serif;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  color: #0f172a;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+.formGroup {
+  margin-bottom: 1.5rem;
+}
+.label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #334155;
+}
+.input, .select, .textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+.button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.button:hover { background-color: #1d4ed8; }
+.buttonSecondary {
+  background-color: #e2e8f0;
+  color: #334155;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.buttonSecondary:hover { background-color: #cbd5e1; }
+.buttonReject {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.buttonReject:hover { background-color: #dc2626; }
+.buttonApprove {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.buttonApprove:hover { background-color: #059669; }
+.detailCard {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+.detailRow {
+  display: flex;
+  margin-bottom: 0.75rem;
+}
+.detailLabel {
+  width: 150px;
+  font-weight: 600;
+  color: #475569;
+}
+.detailValue {
+  flex: 1;
+  color: #0f172a;
+}
+.stepCard {
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  background: white;
+}
+.stepCardPending { border-left: 4px solid #eab308; }
+.stepCardApproved { border-left: 4px solid #10b981; }
+.stepCardRejected { border-left: 4px solid #ef4444; }
