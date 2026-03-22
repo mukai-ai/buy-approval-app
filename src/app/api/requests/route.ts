@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const formData = await req.formData();
+    const formData = await request.formData();
     const type = formData.get('type') as string;
     const title = formData.get('title') as string;
     const amountStr = formData.get('amount') as string;
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
     // 最初のステップ (order === 1) の全員へ通知
     const firstApprovers = flow.filter(s => s.order === 1);
     // ホストヘッダーから基準URLを取得（環境変数に頼らない方法）
-    const host = req.headers.get('host');
+    const host = request.headers.get('host');
     const protocol = host?.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
     const url = `${baseUrl}/requests/${newRequest.id}`;
