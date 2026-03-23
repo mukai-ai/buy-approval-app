@@ -9,13 +9,13 @@ export default function ActionButtons({ requestId }: { requestId: string }) {
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleAction = async (action: "APPROVE" | "REJECT") => {
-    if (action === "REJECT" && !comment.trim()) {
+  const handleAction = async (action: "APPROVED" | "REJECTED") => {
+    if (action === "REJECTED" && !comment.trim()) {
       alert("却下する場合はコメント（理由）を入力してください。");
       return;
     }
     
-    if (!confirm(action === "APPROVE" ? "この申請を承認しますか？" : "この申請を却下しますか？")) {
+    if (!confirm(action === "APPROVED" ? "この申請を承認しますか？" : "この申請を却下しますか？")) {
       return;
     }
 
@@ -27,7 +27,7 @@ export default function ActionButtons({ requestId }: { requestId: string }) {
         body: JSON.stringify({ action, comment }),
       });
       if (res.ok) {
-        alert(action === "APPROVE" ? "承認しました" : "却下しました");
+        alert(action === "APPROVED" ? "承認しました" : "却下しました");
         router.refresh(); 
       } else {
         const err = await res.json();
@@ -52,10 +52,10 @@ export default function ActionButtons({ requestId }: { requestId: string }) {
         style={{ marginBottom: "1rem" }}
       />
       <div style={{ display: "flex", gap: "1rem" }}>
-        <button className={styles.buttonApprove} onClick={() => handleAction("APPROVE")} disabled={loading}>
+        <button className={styles.buttonApprove} onClick={() => handleAction("APPROVED")} disabled={loading}>
           {loading ? "処理中..." : "✓ 承認する"}
         </button>
-        <button className={styles.buttonReject} onClick={() => handleAction("REJECT")} disabled={loading}>
+        <button className={styles.buttonReject} onClick={() => handleAction("REJECTED")} disabled={loading}>
           {loading ? "処理中..." : "✗ 却下する"}
         </button>
       </div>

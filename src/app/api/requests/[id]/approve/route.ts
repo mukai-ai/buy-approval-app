@@ -16,7 +16,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   const { action, comment } = await req.json(); // 'APPROVE' | 'REJECT'
   const email = session.user.email;
 
-  if (action !== 'APPROVE' && action !== 'REJECT') {
+  if (action !== 'APPROVED' && action !== 'REJECTED') {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
@@ -57,13 +57,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         }
       });
 
-      if (action === 'REJECT') {
+      if (action === 'REJECTED') {
         isRequestRejected = true;
         await tx.request.update({
           where: { id: requestId },
           data: { status: 'REJECTED' }
         });
-      } else if (action === 'APPROVE') {
+      } else if (action === 'APPROVED') {
         // 同一のstepOrderの全タスクを取得 (更新された状態であるはずがトランザクション内なので再取得または自分で判定)
         const updatedSteps = await tx.approvalStep.findMany({
           where: { requestId }
