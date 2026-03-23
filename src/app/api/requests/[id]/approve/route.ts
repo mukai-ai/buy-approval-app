@@ -96,13 +96,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     console.log('DEBUG: Approve route host header:', host);
     const protocol = host?.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
+    const now = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
     const url = `${baseUrl}/requests/${requestId}`;
 
     if (isRequestRejected) {
       await sendNotificationEmail(
         request.applicantEmail,
         `【買付/リフォーム承認：却下】${request.title}`,
-        `申請が却下されました。\n却下者: ${email}\n理由: ${comment || 'なし'}\nURL: ${url}`,
+        `申請が却下されました。\n却下者: ${email}\n時刻: ${now}\n理由: ${comment || 'なし'}\nURL: ${url}`,
         session.user.name || email || undefined,
         email || undefined
       );
@@ -110,7 +111,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       await sendNotificationEmail(
         request.applicantEmail,
         `【買付/リフォーム承認：完了】${request.title}`,
-        `申請がすべての承認者により承認されました。\nURL: ${url}`,
+        `申請がすべての承認者により承認されました。\n承認者（最終）: ${email}\n時刻: ${now}\nURL: ${url}`,
         session.user.name || email || undefined,
         email || undefined
       );

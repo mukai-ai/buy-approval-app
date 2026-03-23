@@ -28,6 +28,7 @@ export default function HomePage() {
   const [myRequests, setMyRequests] = useState<RequestType[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<ApprovalStepType[]>([]);
   const [pastApprovals, setPastApprovals] = useState<ApprovalStepType[]>([]);
+  const [filterText, setFilterText] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -116,11 +117,26 @@ export default function HomePage() {
           </section>
 
           <section>
-            <h2 className={styles.sectionTitle}>過去の承認履歴</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h2 className={styles.sectionTitle} style={{ margin: 0 }}>過去の承認履歴</h2>
+              <input
+                type="text"
+                placeholder="キーワードで検索..."
+                className={styles.input}
+                style={{ width: "200px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+              />
+            </div>
             {pastApprovals.length === 0 ? (
               <p style={{ color: "#64748b" }}>過去の承認履歴はありません。</p>
             ) : (
-              pastApprovals.map((step) => (
+              pastApprovals
+                .filter(step => 
+                  step.request.title.toLowerCase().includes(filterText.toLowerCase()) ||
+                  step.request.applicantEmail.toLowerCase().includes(filterText.toLowerCase())
+                )
+                .map((step) => (
                 <div
                   key={step.id}
                   className={styles.card}
