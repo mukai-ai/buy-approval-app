@@ -91,10 +91,10 @@ export async function POST(request: Request) {
       }
     } else if (type === 'REFORM') {
       if (amount <= 15000000) {
-        flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 1 });
+        flow.push({ email: 'admin@tokyomf.co.jp', order: 1 });
       } else {
-        flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 1 });
-        flow.push({ email: 'otsuka@tokyomf.co.jp', order: 2 });
+        flow.push({ email: 'admin@tokyomf.co.jp', order: 1 });
+        flow.push({ email: 'admin@tokyomf.co.jp', order: 2 });
       }
     }
 
