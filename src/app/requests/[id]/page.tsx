@@ -111,6 +111,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
           requestId={reqData.id} 
           isApplicant={isApplicant} 
           isRejected={reqData.status === "REJECTED"}
+          requestStatus={reqData.status}
           requestData={JSON.parse(JSON.stringify(reqData))}
         />
       </div>

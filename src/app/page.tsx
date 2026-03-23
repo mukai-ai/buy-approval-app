@@ -18,6 +18,7 @@ type RequestType = {
 type ApprovalStepType = {
   id: string;
   status: string;
+  updatedAt: string;
   request: RequestType;
 };
 
@@ -135,8 +136,11 @@ export default function HomePage() {
                     </span>
                   </div>
                   <h3 className={styles.cardTitle}>{step.request.title}</h3>
-                  <div className={styles.cardMeta}>
+                  <div className={styles.cardMeta} style={{ display: "flex", justifyContent: "space-between" }}>
                     <span>申請者: {step.request.applicantEmail}</span>
+                    <span style={{ fontSize: "0.875rem", color: "#64748b" }}>
+                      時刻: {new Date(step.updatedAt).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               ))

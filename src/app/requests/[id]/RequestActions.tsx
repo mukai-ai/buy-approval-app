@@ -8,11 +8,13 @@ export default function RequestActions({
   requestId, 
   isApplicant, 
   isRejected,
+  requestStatus,
   requestData 
 }: { 
   requestId: string, 
   isApplicant: boolean, 
   isRejected: boolean,
+  requestStatus: string,
   requestData: any
 }) {
   const router = useRouter();
@@ -54,7 +56,7 @@ export default function RequestActions({
 
   return (
     <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-      {isApplicant && !isDeleting && (
+      {isApplicant && requestStatus === "PENDING" && !isDeleting && (
         <button 
           onClick={handleDelete} 
           className={styles.buttonSecondary}
