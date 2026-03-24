@@ -35,9 +35,14 @@ export default function HomePage() {
   const LIMIT = 5;
 
   useEffect(() => {
+    // 検索ワードが変わったら1ページ目に戻す
+    setCurrentPage(1);
+  }, [filterText]);
+
+  useEffect(() => {
     if (status === "authenticated") {
       setLoading(true);
-      fetch(`/api/requests?page=${currentPage}&limit=${LIMIT}`)
+      fetch(`/api/requests?page=${currentPage}&limit=${LIMIT}&search=${encodeURIComponent(filterText)}`)
         .then((res) => res.json())
         .then((data) => {
           setMyRequests(data.myRequests || []);
@@ -51,7 +56,7 @@ export default function HomePage() {
           setLoading(false);
         });
     }
-  }, [status, currentPage]);
+  }, [status, currentPage, filterText]);
 
   const handleExportCSV = async () => {
     try {
@@ -195,12 +200,7 @@ export default function HomePage() {
             {pastApprovals.length === 0 ? (
               <p style={{ color: "#64748b" }}>過去の承認履歴はありません。</p>
             ) : (
-              pastApprovals
-                .filter(step => 
-                  step.request.title.toLowerCase().includes(filterText.toLowerCase()) ||
-                  step.request.applicantEmail.toLowerCase().includes(filterText.toLowerCase())
-                )
-                .map((step) => (
+              pastApprovals.map((step) => (
                 <div
                   key={step.id}
                   className={styles.card}
