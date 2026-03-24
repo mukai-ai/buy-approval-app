@@ -87,13 +87,9 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
           </div>
         </div>
         <div className={styles.detailRow}>
-          <div className={styles.detailLabel}>アップロードファイル:</div>
+          <div className={styles.detailLabel}>社内サーバーのファイルパス等:</div>
           <div className={styles.detailValue}>
-            {reqData.attachmentFile ? (
-              <a href={reqData.attachmentFile} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", textDecoration: "underline" }}>
-                ファイルを表示・ダウンロード
-              </a>
-            ) : "なし"}
+            {reqData.attachmentFile || "なし"}
           </div>
         </div>
         <div className={styles.detailRow}>

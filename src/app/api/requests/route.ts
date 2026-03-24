@@ -4,30 +4,42 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendNotificationEmail } from '@/lib/mailer';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import { existsSync } from 'fs';
+
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   const email = session.user.email;
 
+  const { searchParams } = new URL(request.url);
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '5');
+  const skip = (page - 1) * limit;
+
+  // 自分の申請状況 (myRequests)
   const myRequests = await prisma.request.findMany({
     where: { applicantEmail: email },
     include: { approvalSteps: true },
     orderBy: { createdAt: 'desc' },
+    skip: skip,
+    take: limit,
   });
+  const myRequestsTotal = await prisma.request.count({ where: { applicantEmail: email } });
 
+  // 承認依頼 (pendingApprovals)
   const pendingApprovals = await prisma.approvalStep.findMany({
     where: { approverEmail: email, status: 'PENDING' },
     include: { request: true },
     orderBy: { createdAt: 'desc' },
+    skip: skip,
+    take: limit,
   });
+  const pendingApprovalsTotal = await prisma.approvalStep.count({ where: { approverEmail: email, status: 'PENDING' } });
 
+  // 過去の承認履歴 (pastApprovals)
   const pastApprovals = await prisma.approvalStep.findMany({
     where: { 
       approverEmail: email, 
@@ -35,9 +47,24 @@ export async function GET() {
     },
     include: { request: true },
     orderBy: { updatedAt: 'desc' },
+    skip: skip,
+    take: limit,
+  });
+  const pastApprovalsTotal = await prisma.approvalStep.count({ 
+    where: { 
+      approverEmail: email, 
+      status: { in: ['APPROVED', 'REJECTED'] } 
+    } 
   });
 
-  return NextResponse.json({ myRequests, pendingApprovals, pastApprovals });
+  return NextResponse.json({ 
+    myRequests, 
+    myRequestsTotal,
+    pendingApprovals, 
+    pendingApprovalsTotal,
+    pastApprovals,
+    pastApprovalsTotal
+  });
 }
 
 export async function POST(request: Request) {
@@ -57,24 +84,10 @@ export async function POST(request: Request) {
     const startDate = formData.get('startDate') as string | null;
     const endDate = formData.get('endDate') as string | null;
     const attachmentLink = formData.get('attachmentLink') as string | null;
-    const file = formData.get('file') as File | null;
+    const attachmentFile = formData.get('attachmentFile') as string | null;
 
     if (!title || !type) {
       return NextResponse.json({ error: 'Require title and type' }, { status: 400 });
-    }
-
-    // ファイルアップロード処理 (ローカル public/uploads へ保存)
-    let attachmentFilePath = null;
-    if (file && file.size > 0) {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const filename = Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-      if (!existsSync(uploadDir)) {
-        await mkdir(uploadDir, { recursive: true });
-      }
-      await writeFile(path.join(uploadDir, filename), buffer);
-      attachmentFilePath = `/uploads/${filename}`;
     }
 
     // 承認フロー要件の決定
@@ -84,7 +97,6 @@ export async function POST(request: Request) {
       if (amount <= 30000000) {
         flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
       } else {
-        // 並列承認 (1: 小柳, 1: 吉富), 順次(2: 大塚)
         flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
         flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 1 });
         flow.push({ email: 'otsuka@tokyomf.co.jp', order: 2 });
@@ -108,7 +120,7 @@ export async function POST(request: Request) {
           startDate: startDate ? new Date(startDate) : null,
           endDate: endDate ? new Date(endDate) : null,
           attachmentLink,
-          attachmentFile: attachmentFilePath,
+          attachmentFile: attachmentFile, // 直接テキストとして保存
           applicantEmail: session.user!.email!,
         },
       });
@@ -128,10 +140,7 @@ export async function POST(request: Request) {
 
     // 最初のステップ (order === 1) の全員へ通知
     const firstApprovers = flow.filter(s => s.order === 1);
-    // ホストヘッダーから基準URLを取得（環境変数に頼らない方法）
-    const headersList = headers();
-    const host = headersList.get('host');
-    console.log('DEBUG: API route host header:', host);
+    const host = headers().get('host');
     const protocol = host?.includes('localhost') ? 'http' : 'https';
     const baseUrl = `${protocol}://${host}`;
     const url = `${baseUrl}/requests/${newRequest.id}`;

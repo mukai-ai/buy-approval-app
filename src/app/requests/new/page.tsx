@@ -16,7 +16,7 @@ function NewRequestForm() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [attachmentLink, setAttachmentLink] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [attachmentFile, setAttachmentFile] = useState("");
 
   useEffect(() => {
     // 再申請（コピー）時のパラメータ読み込み
@@ -28,6 +28,7 @@ function NewRequestForm() {
       if (amt) setAmount(Number(amt));
       setCompanyName(searchParams.get("companyName") || "");
       setAttachmentLink(searchParams.get("attachmentLink") || "");
+      setAttachmentFile(searchParams.get("attachmentFile") || "");
     }
   }, [searchParams]);
 
@@ -45,7 +46,7 @@ function NewRequestForm() {
       formData.append("title", title);
       formData.append("amount", amount.toString());
       if (attachmentLink) formData.append("attachmentLink", attachmentLink);
-      if (file) formData.append("file", file);
+      if (attachmentFile) formData.append("attachmentFile", attachmentFile);
 
       if (type === "REFORM") {
         if (companyName) formData.append("companyName", companyName);
@@ -55,7 +56,7 @@ function NewRequestForm() {
 
       const res = await fetch("/api/requests", {
         method: "POST",
-        body: formData, // FormDataをそのまま送る
+        body: formData,
       });
 
       if (res.ok) {
@@ -152,7 +153,7 @@ function NewRequestForm() {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>添付資料（外部のリンク等がある場合）</label>
+          <label className={styles.label}>参照リンク（Googleドライブ等）</label>
           <input
             type="url"
             className={styles.input}
@@ -163,11 +164,13 @@ function NewRequestForm() {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>添付ファイル（PCからアップロード）</label>
+          <label className={styles.label}>社内サーバーのファイルパス等</label>
           <input
-            type="file"
+            type="text"
             className={styles.input}
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            value={attachmentFile}
+            onChange={(e) => setAttachmentFile(e.target.value)}
+            placeholder="例: Z:\プロジェクト資料\2024\見積書.pdf"
           />
         </div>
 

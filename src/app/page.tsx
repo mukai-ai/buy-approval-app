@@ -30,19 +30,28 @@ export default function HomePage() {
   const [pastApprovals, setPastApprovals] = useState<ApprovalStepType[]>([]);
   const [filterText, setFilterText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totals, setTotals] = useState({ my: 0, pending: 0, past: 0 });
+  const LIMIT = 5;
 
   useEffect(() => {
     if (status === "authenticated") {
-      fetch("/api/requests")
+      setLoading(true);
+      fetch(`/api/requests?page=${currentPage}&limit=${LIMIT}`)
         .then((res) => res.json())
         .then((data) => {
           setMyRequests(data.myRequests || []);
           setPendingApprovals(data.pendingApprovals || []);
           setPastApprovals(data.pastApprovals || []);
+          setTotals({
+            my: data.myRequestsTotal || 0,
+            pending: data.pendingApprovalsTotal || 0,
+            past: data.pastApprovalsTotal || 0
+          });
           setLoading(false);
         });
     }
-  }, [status]);
+  }, [status, currentPage]);
 
   if (status === "loading" || (status === "authenticated" && loading)) {
     return <div className={styles.container}>Loading...</div>;
@@ -161,6 +170,32 @@ export default function HomePage() {
                 </div>
               ))
             )}
+
+            {/* Pagination Controls */}
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem", marginTop: "2rem" }}>
+              <button 
+                className={styles.buttonOutline} 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                style={{ padding: "0.4rem 1rem", opacity: currentPage === 1 ? 0.5 : 1 }}
+              >
+                前へ
+              </button>
+              <span style={{ fontSize: "0.875rem", color: "#64748b" }}>
+                ページ {currentPage}
+              </span>
+              <button 
+                className={styles.buttonOutline}
+                disabled={Math.max(totals.my, totals.pending, totals.past) <= currentPage * LIMIT}
+                onClick={() => setCurrentPage(p => p + 1)}
+                style={{ 
+                  padding: "0.4rem 1rem", 
+                  opacity: Math.max(totals.my, totals.pending, totals.past) <= currentPage * LIMIT ? 0.5 : 1 
+                }}
+              >
+                次へ
+              </button>
+            </div>
           </section>
         </div>
 

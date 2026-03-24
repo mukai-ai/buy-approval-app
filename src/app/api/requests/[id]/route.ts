@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { unlink } from 'fs/promises';
-import path from 'path';
-import { existsSync } from 'fs';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,14 +28,6 @@ export async function DELETE(
     // 自分の申請しか削除できない
     if (reqData.applicantEmail !== session.user.email) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    // 添付ファイルがあれば削除
-    if (reqData.attachmentFile) {
-      const filePath = path.join(process.cwd(), 'public', reqData.attachmentFile);
-      if (existsSync(filePath)) {
-        await unlink(filePath);
-      }
     }
 
     // データベースから削除 (Cascading delete to ApprovalSteps)
