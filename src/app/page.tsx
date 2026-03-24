@@ -53,6 +53,54 @@ export default function HomePage() {
     }
   }, [status, currentPage]);
 
+  const handleExportCSV = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/requests?all=true");
+      const data = await res.json();
+      const past = data.pastApprovals || [];
+      
+      if (past.length === 0) {
+        alert("書き出し可能なデータがありません。");
+        setLoading(false);
+        return;
+      }
+
+      // CSVヘッダー
+      let csvContent = "申請タイトル,申請者,区分,金額,ステータス,完了/却下時刻,コメント\n";
+      
+      past.forEach((step: any) => {
+        const row = [
+          `"${step.request.title.replace(/"/g, '""')}"`,
+          `"${step.request.applicantEmail}"`,
+          `"${step.request.type === 'BUY' ? '買付' : 'リフォーム'}"`,
+          step.request.amount,
+          `"${step.status === 'APPROVED' ? '承認' : '却下'}"`,
+          `"${new Date(step.updatedAt).toLocaleString()}"`,
+          `"${(step.comment || '').replace(/"/g, '""')}"`
+        ];
+        csvContent += row.join(",") + "\n";
+      });
+
+      // UTF-8 BOM付与 (Excel文字化け対策)
+      const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `approval_history_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      alert("CSVの作成に失敗しました。");
+      setLoading(false);
+    }
+  };
+
   if (status === "loading" || (status === "authenticated" && loading)) {
     return <div className={styles.container}>Loading...</div>;
   }
@@ -126,13 +174,20 @@ export default function HomePage() {
           </section>
 
           <section>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-              <h2 className={styles.sectionTitle} style={{ margin: 0 }}>過去の承認履歴</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "1rem" }}>
+              <h2 className={styles.sectionTitle} style={{ margin: 0, flex: 1 }}>過去の承認履歴</h2>
+              <button 
+                className={styles.buttonOutline} 
+                onClick={handleExportCSV}
+                style={{ fontSize: "0.75rem", padding: "0.4rem 0.8rem", whiteSpace: "nowrap" }}
+              >
+                CSV出力
+              </button>
               <input
                 type="text"
                 placeholder="キーワードで検索..."
                 className={styles.input}
-                style={{ width: "200px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
+                style={{ width: "180px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
               />

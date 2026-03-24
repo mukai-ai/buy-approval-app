@@ -17,6 +17,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '5');
+  const all = searchParams.get('all') === 'true';
   const skip = (page - 1) * limit;
 
   // 自分の申請状況 (myRequests)
@@ -24,8 +25,8 @@ export async function GET(request: Request) {
     where: { applicantEmail: email },
     include: { approvalSteps: true },
     orderBy: { createdAt: 'desc' },
-    skip: skip,
-    take: limit,
+    skip: all ? undefined : skip,
+    take: all ? undefined : limit,
   });
   const myRequestsTotal = await prisma.request.count({ where: { applicantEmail: email } });
 
@@ -34,8 +35,8 @@ export async function GET(request: Request) {
     where: { approverEmail: email, status: 'PENDING' },
     include: { request: true },
     orderBy: { createdAt: 'desc' },
-    skip: skip,
-    take: limit,
+    skip: all ? undefined : skip,
+    take: all ? undefined : limit,
   });
   const pendingApprovalsTotal = await prisma.approvalStep.count({ where: { approverEmail: email, status: 'PENDING' } });
 
@@ -47,8 +48,8 @@ export async function GET(request: Request) {
     },
     include: { request: true },
     orderBy: { updatedAt: 'desc' },
-    skip: skip,
-    take: limit,
+    skip: all ? undefined : skip,
+    take: all ? undefined : limit,
   });
   const pastApprovalsTotal = await prisma.approvalStep.count({ 
     where: { 
