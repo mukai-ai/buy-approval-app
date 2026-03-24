@@ -11,6 +11,7 @@ function NewRequestForm() {
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState("BUY"); // "BUY" or "REFORM"
   const [title, setTitle] = useState("");
+  const [inputValue, setInputValue] = useState("");
   const [amount, setAmount] = useState<number | "">("");
   const [companyName, setCompanyName] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -25,17 +26,63 @@ function NewRequestForm() {
       setType(searchParams.get("type") || "BUY");
       setTitle(`${searchParams.get("title")}（再申請）`);
       const amt = searchParams.get("amount");
-      if (amt) setAmount(Number(amt));
+      if (amt) {
+        setAmount(Number(amt));
+        setInputValue(amt); // 初期値としてセット
+      }
       setCompanyName(searchParams.get("companyName") || "");
       setAttachmentLink(searchParams.get("attachmentLink") || "");
       setAttachmentFile(searchParams.get("attachmentFile") || "");
     }
   }, [searchParams]);
 
+  // 日本語単位のパースロジック
+  const handleAmountChange = (val: string) => {
+    setInputValue(val);
+    
+    // 全角半角の正規化、カンマ削除、単位の変換
+    let normalized = val.trim().replace(/,/g, '').replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+    if (!normalized) {
+      setAmount("");
+      return;
+    }
+    
+    let match = normalized.match(/^(\d+(?:\.\d+)?)\s*([万|億|w|W])?$/);
+    if (!match) {
+      const num = parseFloat(normalized);
+      setAmount(isNaN(num) ? "" : num);
+      return;
+    }
+
+    let numValue = parseFloat(match[1]);
+    let unit = match[2];
+
+    if (unit === "万" || unit === "w" || unit === "W") numValue *= 10000;
+    if (unit === "億") numValue *= 100000000;
+
+    setAmount(numValue);
+  };
+
+  const formatToJapanese = (num: number | ""): string => {
+    if (num === "" || isNaN(num)) return "";
+    if (num === 0) return "0円";
+    
+    const oku = Math.floor(num / 100000000);
+    const man = Math.floor((num % 100000000) / 10000);
+    const nokori = num % 10000;
+
+    let result = "";
+    if (oku > 0) result += `${oku.toLocaleString()}億`;
+    if (man > 0) result += `${man.toLocaleString()}万`;
+    if (nokori > 0) result += `${nokori.toLocaleString()}`;
+    
+    return result + "円";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || amount === "") {
-      alert("必須項目を入力してください");
+      alert("金額を正しく入力してください");
       return;
     }
     
@@ -138,17 +185,32 @@ function NewRequestForm() {
 
         <div className={styles.formGroup}>
           <label className={styles.label}>金額（円）</label>
-          <input
-            type="number"
-            className={styles.input}
-            required
-            min="0"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value ? Number(e.target.value) : "")}
-            placeholder="例: 15000000"
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              className={styles.input}
+              required
+              value={inputValue}
+              onChange={(e) => handleAmountChange(e.target.value)}
+              placeholder="例: 1500万 または 15000000"
+            />
+            {amount !== "" && (
+              <div style={{
+                marginTop: "0.5rem",
+                fontSize: "1rem",
+                fontWeight: "bold",
+                color: "#166534",
+                padding: "0.5rem",
+                backgroundColor: "#f0fdf4",
+                borderRadius: "4px",
+                border: "1px solid #bbf7d0"
+              }}>
+                プレビュー: {formatToJapanese(amount)} ({amount.toLocaleString()}円)
+              </div>
+            )}
+          </div>
           <p style={{ fontSize: "0.875rem", color: "#64748b", marginTop: "0.5rem" }}>
-            ※金額によって承認フローが自動的に決定されます。
+            ※「万」や「億」を使った入力も可能です（例：1500万）。
           </p>
         </div>
 
