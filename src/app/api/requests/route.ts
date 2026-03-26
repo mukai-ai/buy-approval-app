@@ -120,18 +120,19 @@ export async function POST(request: Request) {
     let flow: { email: string; order: number }[] = [];
 
     if (type === 'BUY') {
-      if (amount <= 30000000) {
+      if (amount < 30000000) {
         flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
       } else {
         flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
-        flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 1 });
+        flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 2 });
         flow.push({ email: 'otsuka@tokyomf.co.jp', order: 2 });
       }
     } else if (type === 'REFORM') {
-      if (amount <= 15000000) {
+      if (amount < 15000000) {
         flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 1 });
       } else {
         flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 1 });
+        flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 2 });
         flow.push({ email: 'otsuka@tokyomf.co.jp', order: 2 });
       }
     }
