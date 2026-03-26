@@ -30,7 +30,8 @@ export default function HomePage() {
   const [pastApprovals, setPastApprovals] = useState<ApprovalStepType[]>([]);
   const [filterText, setFilterText] = useState("");
   const [myFilterText, setMyFilterText] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Changed initial state to false
+  const [initialLoading, setInitialLoading] = useState(true); // Added initialLoading state
   const [currentPage, setCurrentPage] = useState(1);
   const [myCurrentPage, setMyCurrentPage] = useState(1);
   const [totals, setTotals] = useState({ my: 0, pending: 0, past: 0 });
@@ -61,6 +62,11 @@ export default function HomePage() {
             past: data.pastApprovalsTotal || 0
           });
           setLoading(false);
+          setInitialLoading(false); // Set initialLoading to false after first fetch
+        })
+        .catch(() => { // Added catch block
+          setLoading(false);
+          setInitialLoading(false);
         });
     }
   }, [status, currentPage, filterText, myCurrentPage, myFilterText]);
@@ -158,7 +164,7 @@ export default function HomePage() {
     }
   };
 
-  if (status === "loading" || (status === "authenticated" && loading)) {
+  if (status === "loading" || (status === "authenticated" && initialLoading)) { // Changed condition to use initialLoading
     return <div className={styles.container}>Loading...</div>;
   }
 
@@ -185,7 +191,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} style={{ opacity: loading ? 0.7 : 1, transition: "opacity 0.2s" }}> {/* Added opacity for re-fetches */}
       <header className={styles.header}>
         <div style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem" }}>
           <h1 className={styles.title}>ダッシュボード</h1>
@@ -242,7 +248,7 @@ export default function HomePage() {
               </button>
               <input
                 type="text"
-                placeholder="キーワードで検索..."
+                placeholder="キーワード検索..." // Placeholder already correct
                 className={styles.input}
                 style={{ width: "180px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
                 value={filterText}
@@ -318,7 +324,7 @@ export default function HomePage() {
             </button>
             <input
               type="text"
-              placeholder="タイトル検索..."
+              placeholder="キーワード検索..."
               className={styles.input}
               style={{ width: "150px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
               value={myFilterText}
