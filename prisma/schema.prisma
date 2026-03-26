@@ -85,6 +85,4 @@ model ApprovalStep {
   updatedAt     DateTime @updatedAt
 
   request       Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
-
-  @@unique([requestId, stepOrder])
 }
