@@ -19,7 +19,13 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get('limit') || '5');
   const all = searchParams.get('all') === 'true';
   const search = searchParams.get('search') || '';
+  
+  const myPage = parseInt(searchParams.get('myPage') || '1');
+  const myLimit = parseInt(searchParams.get('myLimit') || '5');
+  const mySearch = searchParams.get('mySearch') || '';
+  
   const skip = (page - 1) * limit;
+  const mySkip = (myPage - 1) * myLimit;
 
   // 検索条件の構築 (過去の承認履歴用)
   const pastWhere: any = {
@@ -36,15 +42,24 @@ export async function GET(request: Request) {
     };
   }
 
+  // 検索条件の構築 (自分の申請状況用)
+  const myWhere: any = {
+    applicantEmail: email,
+  };
+
+  if (mySearch) {
+    myWhere.title = { contains: mySearch, mode: 'insensitive' };
+  }
+
   // 自分の申請状況 (myRequests)
   const myRequests = await prisma.request.findMany({
-    where: { applicantEmail: email },
+    where: myWhere,
     include: { approvalSteps: true },
     orderBy: { createdAt: 'desc' },
-    skip: all ? undefined : skip,
-    take: all ? undefined : limit,
+    skip: all ? undefined : mySkip,
+    take: all ? undefined : myLimit,
   });
-  const myRequestsTotal = await prisma.request.count({ where: { applicantEmail: email } });
+  const myRequestsTotal = await prisma.request.count({ where: myWhere });
 
   // 承認依頼 (pendingApprovals)
   const pendingApprovals = await prisma.approvalStep.findMany({

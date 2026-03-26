@@ -29,8 +29,10 @@ export default function HomePage() {
   const [pendingApprovals, setPendingApprovals] = useState<ApprovalStepType[]>([]);
   const [pastApprovals, setPastApprovals] = useState<ApprovalStepType[]>([]);
   const [filterText, setFilterText] = useState("");
+  const [myFilterText, setMyFilterText] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [myCurrentPage, setMyCurrentPage] = useState(1);
   const [totals, setTotals] = useState({ my: 0, pending: 0, past: 0 });
   const LIMIT = 5;
 
@@ -40,9 +42,14 @@ export default function HomePage() {
   }, [filterText]);
 
   useEffect(() => {
+    setMyCurrentPage(1);
+  }, [myFilterText]);
+
+  useEffect(() => {
     if (status === "authenticated") {
       setLoading(true);
-      fetch(`/api/requests?page=${currentPage}&limit=${LIMIT}&search=${encodeURIComponent(filterText)}`)
+      const url = `/api/requests?page=${currentPage}&limit=${LIMIT}&search=${encodeURIComponent(filterText)}&myPage=${myCurrentPage}&myLimit=${LIMIT}&mySearch=${encodeURIComponent(myFilterText)}`;
+      fetch(url)
         .then((res) => res.json())
         .then((data) => {
           setMyRequests(data.myRequests || []);
@@ -56,12 +63,13 @@ export default function HomePage() {
           setLoading(false);
         });
     }
-  }, [status, currentPage, filterText]);
+  }, [status, currentPage, filterText, myCurrentPage, myFilterText]);
 
   const handleExportCSV = async () => {
+    // (省略されないように一応そのまま保持か、差分で置換)
     try {
       setLoading(true);
-      const res = await fetch("/api/requests?all=true");
+      const res = await fetch(`/api/requests?all=true&search=${encodeURIComponent(filterText)}`);
       const data = await res.json();
       const past = data.pastApprovals || [];
       
@@ -87,13 +95,57 @@ export default function HomePage() {
         csvContent += row.join(",") + "\n";
       });
 
-      // UTF-8 BOM付与 (Excel文字化け対策)
       const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
       const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
       link.setAttribute("download", `approval_history_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      alert("CSVの作成に失敗しました。");
+      setLoading(false);
+    }
+  };
+
+  const handleExportMyCSV = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/requests?all=true&mySearch=${encodeURIComponent(myFilterText)}`);
+      const data = await res.json();
+      const my = data.myRequests || [];
+      
+      if (my.length === 0) {
+        alert("書き出し可能なデータがありません。");
+        setLoading(false);
+        return;
+      }
+
+      // CSVヘッダー
+      let csvContent = "申請タイトル,区分,金額,ステータス,申請日時\n";
+      
+      my.forEach((req: any) => {
+        const row = [
+          `"${req.title.replace(/"/g, '""')}"`,
+          `"${req.type === 'BUY' ? '買付' : 'リフォーム'}"`,
+          req.amount,
+          `"${req.status === 'APPROVED' ? '承認済' : req.status === 'REJECTED' ? '却下' : '審査中'}"`,
+          `"${new Date(req.createdAt).toLocaleString()}"`
+        ];
+        csvContent += row.join(",") + "\n";
+      });
+
+      const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const blob = new Blob([bom, csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `my_requests_${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
@@ -255,9 +307,26 @@ export default function HomePage() {
         </div>
 
         <div>
-          <h2 className={styles.sectionTitle}>自分の申請状況</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "1rem" }}>
+            <h2 className={styles.sectionTitle} style={{ margin: 0, flex: 1 }}>自分の申請状況</h2>
+            <button 
+              className={styles.buttonOutline} 
+              onClick={handleExportMyCSV}
+              style={{ fontSize: "0.75rem", padding: "0.4rem 0.8rem", whiteSpace: "nowrap" }}
+            >
+              CSV出力
+            </button>
+            <input
+              type="text"
+              placeholder="タイトル検索..."
+              className={styles.input}
+              style={{ width: "150px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
+              value={myFilterText}
+              onChange={(e) => setMyFilterText(e.target.value)}
+            />
+          </div>
           {myRequests.length === 0 ? (
-            <p style={{ color: "#64748b" }}>まだ申請履歴がありません。</p>
+            <p style={{ color: "#64748b" }}>条件に一致する申請はありません。</p>
           ) : (
             myRequests.map((req) => (
               <div
@@ -281,6 +350,32 @@ export default function HomePage() {
               </div>
             ))
           )}
+
+          {/* My Requests Pagination */}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "1rem", marginTop: "2rem" }}>
+            <button 
+              className={styles.buttonOutline} 
+              disabled={myCurrentPage === 1}
+              onClick={() => setMyCurrentPage(p => Math.max(1, p - 1))}
+              style={{ padding: "0.4rem 1rem", opacity: myCurrentPage === 1 ? 0.5 : 1 }}
+            >
+              前へ
+            </button>
+            <span style={{ fontSize: "0.875rem", color: "#64748b" }}>
+              ページ {myCurrentPage}
+            </span>
+            <button 
+              className={styles.buttonOutline}
+              disabled={totals.my <= myCurrentPage * LIMIT}
+              onClick={() => setMyCurrentPage(p => p + 1)}
+              style={{ 
+                padding: "0.4rem 1rem", 
+                opacity: totals.my <= myCurrentPage * LIMIT ? 0.5 : 1 
+              }}
+            >
+              次へ
+            </button>
+          </div>
         </div>
       </div>
     </div>
