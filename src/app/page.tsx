@@ -172,7 +172,7 @@ export default function HomePage() {
     return (
       <div className={styles.loginContainer}>
         <div className={styles.loginCard}>
-          <h1 style={{ marginBottom: "1rem", color: "#0f172a" }}>承認ワークフロー</h1>
+          <h1 style={{ marginBottom: "1rem", color: "#2563eb" }}>承認ワークフロー</h1>
           <p style={{ color: "#64748b", marginBottom: "2rem", lineHeight: "1.6" }}>
             システムを利用するにはGoogleアカウント<br />でログインしてください。
           </p>
