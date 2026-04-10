@@ -316,7 +316,7 @@ export default function HomePage() {
 
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "1rem" }}>
-            <h2 className={styles.sectionTitle} style={{ margin: 0, flex: 1 }}>自分の申請状況</h2>
+            <h2 className={styles.sectionTitle} style={{ margin: 0, flex: 1, fontFamily: '"Mochiy Pop P One", sans-serif' }}>自分の申請状況</h2>
             <button 
               className={styles.buttonOutline} 
               onClick={handleExportMyCSV}
