@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendNotificationEmail } from '@/lib/mailer';
+import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
@@ -99,19 +100,27 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const now = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
     const url = `${baseUrl}/requests/${requestId}`;
 
+    let specificInfoLine = '';
+    if (CONFIRMATION_TYPES.includes(request.type)) {
+      const formattedDate = request.startDate ? new Date(request.startDate).toLocaleDateString("ja-JP") : "未入力";
+      specificInfoLine = `${getDateLabel(request.type)}: ${formattedDate}\n`;
+    } else {
+      specificInfoLine = `金額: ${request.amount.toLocaleString()}円\n`;
+    }
+
     if (isRequestRejected) {
       await sendNotificationEmail(
         request.applicantEmail,
-        `【買付/リフォーム承認：却下】${request.title}`,
-        `申請が却下されました。\n却下者: ${email}\n時刻: ${now}\n理由: ${comment || 'なし'}\nURL: ${url}`,
+        `【${getTypeLabel(request.type)}：却下】${request.title}`,
+        `申請が却下されました。\n申請区分: ${getTypeLabel(request.type)}\n申請者: ${request.applicantEmail}\n${specificInfoLine}却下者: ${email}\n時刻: ${now}\n理由: ${comment || 'なし'}\nURL: ${url}`,
         session.user.name || email || undefined,
         email || undefined
       );
     } else if (isRequestApproved) {
       await sendNotificationEmail(
         request.applicantEmail,
-        `【買付/リフォーム承認：完了】${request.title}`,
-        `申請がすべての承認者により承認されました。\n承認者（最終）: ${email}\n時刻: ${now}\nURL: ${url}`,
+        `【${getTypeLabel(request.type)}：完了】${request.title}`,
+        `申請がすべての承認者により承認されました。\n申請区分: ${getTypeLabel(request.type)}\n申請者: ${request.applicantEmail}\n${specificInfoLine}承認者（最終）: ${email}\n時刻: ${now}\nURL: ${url}`,
         session.user.name || email || undefined,
         email || undefined
       );
@@ -121,7 +130,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         await sendNotificationEmail(
           approverEmail,
           `【承認依頼】${request.title}`,
-          `前のステップの承認が完了し、あなたの承認待ちとなりました。\n最終コメント: ${comment || 'なし'}\nURL: ${url}`,
+          `前のステップの承認が完了し、あなたの承認待ちとなりました。\n申請区分: ${getTypeLabel(request.type)}\n申請者: ${request.applicantEmail}\n${specificInfoLine}最終コメント: ${comment || 'なし'}\nURL: ${url}`,
           session.user.name || email || undefined,
           email || undefined
         );
