@@ -4,6 +4,7 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./dashboard.module.css";
+import { getTypeLabel } from "@/lib/requestTypes";
 
 type RequestType = {
   id: string;
@@ -92,7 +93,7 @@ export default function HomePage() {
         const row = [
           `"${step.request.title.replace(/"/g, '""')}"`,
           `"${step.request.applicantEmail}"`,
-          `"${step.request.type === 'BUY' ? '買付' : 'リフォーム'}"`,
+          `"${getTypeLabel(step.request.type).replace("承認", "")}"`,
           step.request.amount,
           `"${step.status === 'APPROVED' ? '承認' : '却下'}"`,
           `"${new Date(step.updatedAt).toLocaleString()}"`,
@@ -138,7 +139,7 @@ export default function HomePage() {
       my.forEach((req: any) => {
         const row = [
           `"${req.title.replace(/"/g, '""')}"`,
-          `"${req.type === 'BUY' ? '買付' : 'リフォーム'}"`,
+          `"${getTypeLabel(req.type)}"`,
           req.amount,
           `"${req.status === 'APPROVED' ? '承認済' : req.status === 'REJECTED' ? '却下' : '審査中'}"`,
           `"${new Date(req.createdAt).toLocaleString()}"`
@@ -224,7 +225,7 @@ export default function HomePage() {
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                     <span className={`${styles.statusBadge} ${styles.statusPending}`}>確認待ち</span>
                     <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "bold" }}>
-                      {step.request.type === "BUY" ? "買付承認" : "リフォーム承認"}
+                      {getTypeLabel(step.request.type)}
                     </span>
                   </div>
                   <h3 className={styles.cardTitle}>{step.request.title}</h3>
@@ -270,7 +271,7 @@ export default function HomePage() {
                       {step.status === "APPROVED" ? "承認済" : "却下"}
                     </span>
                     <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "bold" }}>
-                      {step.request.type === "BUY" ? "買付承認" : "リフォーム承認"}
+                      {getTypeLabel(step.request.type)}
                     </span>
                   </div>
                   <h3 className={styles.cardTitle}>{step.request.title}</h3>
@@ -346,7 +347,7 @@ export default function HomePage() {
                     {req.status === "APPROVED" ? "承認済" : req.status === "REJECTED" ? "却下" : "審査中"}
                   </span>
                   <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "bold" }}>
-                    {req.type === "BUY" ? "買付承認" : "リフォーム承認"}
+                    {getTypeLabel(req.type)}
                   </span>
                 </div>
                 <h3 className={styles.cardTitle}>{req.title}</h3>

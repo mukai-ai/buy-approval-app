@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendNotificationEmail } from '@/lib/mailer';
+import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
 
 export const dynamic = 'force-dynamic';
 
@@ -135,6 +136,11 @@ export async function POST(request: Request) {
         flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 2 });
         flow.push({ email: 'otsuka@tokyomf.co.jp', order: 2 });
       }
+    } else if (CONFIRMATION_TYPES.includes(type)) {
+      flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
+      flow.push({ email: 'satou@tokyomf.co.jp', order: 2 });
+      flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 3 });
+      flow.push({ email: 'otsuka@tokyomf.co.jp', order: 4 });
     }
 
     const newRequest = await prisma.$transaction(async (tx: any) => {
@@ -172,14 +178,39 @@ export async function POST(request: Request) {
     const baseUrl = `${protocol}://${host}`;
     const url = `${baseUrl}/requests/${newRequest.id}`;
     
+    let specificInfoLine = '';
+    if (CONFIRMATION_TYPES.includes(type)) {
+      const formattedDate = startDate ? new Date(startDate).toLocaleDateString("ja-JP") : "未入力";
+      specificInfoLine = `${getDateLabel(type)}: ${formattedDate}\n`;
+    } else {
+      specificInfoLine = `金額: ${amount.toLocaleString()}円\n`;
+    }
+    
     for (const approver of firstApprovers) {
       await sendNotificationEmail(
         approver.email,
         `【承認依頼】${title}`,
-        `新しい申請が行われました。\n申請区分: ${type === 'BUY' ? '買付' : 'リフォーム'}\n申請者: ${session.user.email}\n金額: ${amount.toLocaleString()}円\nURL: ${url}`,
+        `新しい申請が行われました。\n申請区分: ${getTypeLabel(type)}\n申請者: ${session.user.email}\n${specificInfoLine}URL: ${url}`,
         session.user.name || session.user.email || undefined,
         session.user.email || undefined
       );
+    }
+
+    if (CONFIRMATION_TYPES.includes(type)) {
+      const ccList = [
+        'info@tokyomf.co.jp',
+        'keiri@tokyomf.co.jp',
+        'ishii@tokyomf.co.jp'
+      ];
+      for (const ccEmail of ccList) {
+        await sendNotificationEmail(
+          ccEmail,
+          `【周知】${getTypeLabel(type)}が申請されました：${title}`,
+          `新しい${getTypeLabel(type)}が申請されました。\n※このメールは周知用です。システムでの承認操作は不要です。\n\n申請者: ${session.user.email}\n${specificInfoLine}URL: ${url}`,
+          session.user.name || session.user.email || undefined,
+          session.user.email || undefined
+        );
+      }
     }
 
     return NextResponse.json(newRequest);

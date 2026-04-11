@@ -6,6 +6,7 @@ import Link from "next/link";
 import ApprovalActionButtons from "./ApprovalActionButtons";
 import RequestActions from "./RequestActions";
 import { notFound } from "next/navigation";
+import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
 
 export default async function RequestDetailPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -52,15 +53,17 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
         <div className={styles.detailRow}>
           <div className={styles.detailLabel}>申請区分:</div>
           <div className={styles.detailValue}>
-            {reqData.type === "BUY" ? "買付承認" : "リフォーム承認"}
+            {getTypeLabel(reqData.type)}
           </div>
         </div>
-        <div className={styles.detailRow}>
-          <div className={styles.detailLabel}>金額:</div>
-          <div className={styles.detailValue}>
-            {reqData.amount.toLocaleString()} 円
+        {!CONFIRMATION_TYPES.includes(reqData.type) && (
+          <div className={styles.detailRow}>
+            <div className={styles.detailLabel}>金額:</div>
+            <div className={styles.detailValue}>
+              {reqData.amount.toLocaleString()} 円
+            </div>
           </div>
-        </div>
+        )}
         {reqData.type === "REFORM" && (
           <>
             <div className={styles.detailRow}>
@@ -76,8 +79,16 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             </div>
           </>
         )}
+        {CONFIRMATION_TYPES.includes(reqData.type) && (
+          <div className={styles.detailRow}>
+            <div className={styles.detailLabel}>{getDateLabel(reqData.type)}:</div>
+            <div className={styles.detailValue}>
+              {reqData.startDate ? new Date(reqData.startDate).toLocaleDateString() : "未入力"}
+            </div>
+          </div>
+        )}
         <div className={styles.detailRow}>
-          <div className={styles.detailLabel}>添付資料リンク:</div>
+          <div className={styles.detailLabel}>{CONFIRMATION_TYPES.includes(reqData.type) ? "確認表リンク（Googleドライブ等）:" : "添付資料リンク:"}</div>
           <div className={styles.detailValue}>
             {reqData.attachmentLink ? (
               <a href={reqData.attachmentLink} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", textDecoration: "underline" }}>
@@ -87,7 +98,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
           </div>
         </div>
         <div className={styles.detailRow}>
-          <div className={styles.detailLabel}>社内サーバーのファイルパス等:</div>
+          <div className={styles.detailLabel}>{CONFIRMATION_TYPES.includes(reqData.type) ? "添付資料のファイルorフォルダのパス:" : "社内サーバーのファイルパス等:"}</div>
           <div className={styles.detailValue}>
             {reqData.attachmentFile || "なし"}
           </div>
