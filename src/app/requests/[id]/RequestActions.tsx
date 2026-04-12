@@ -54,9 +54,11 @@ export default function RequestActions({
     router.push(`/requests/new?${params.toString()}`);
   };
 
+  const hasProcessedSteps = requestData.approvalSteps && requestData.approvalSteps.some((s: any) => s.status !== "PENDING");
+
   return (
     <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-      {isApplicant && requestStatus === "PENDING" && !isDeleting && (
+      {isApplicant && requestStatus === "PENDING" && !hasProcessedSteps && !isDeleting && (
         <button 
           onClick={handleDelete} 
           className={styles.buttonSecondary}

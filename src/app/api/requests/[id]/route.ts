@@ -19,6 +19,7 @@ export async function DELETE(
   try {
     const reqData = await prisma.request.findUnique({
       where: { id: requestId },
+      include: { approvalSteps: true },
     });
 
     if (!reqData) {
@@ -28,6 +29,17 @@ export async function DELETE(
     // 自分の申請しか削除できない
     if (reqData.applicantEmail !== session.user.email) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // すでに誰かが承認・アクション済みの場合は削除不可
+    const hasProcessedSteps = reqData.approvalSteps.some(
+      (step: { status: string }) => step.status !== 'PENDING'
+    );
+    if (hasProcessedSteps) {
+      return NextResponse.json(
+        { error: 'Cannot delete because approval process has already started' },
+        { status: 400 }
+      );
     }
 
     // データベースから削除 (Cascading delete to ApprovalSteps)
