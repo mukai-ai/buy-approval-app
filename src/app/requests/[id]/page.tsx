@@ -28,7 +28,8 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
     notFound();
   }
 
-  const currentPendingStep = reqData.approvalSteps.find((s: any) => s.status === "PENDING");
+  const maxRound = reqData.approvalSteps.reduce((max: number, s: any) => Math.max(max, s.round || 1), 1);
+  const currentPendingStep = reqData.approvalSteps.find((s: any) => s.status === "PENDING" && (s.round || 1) === maxRound);
   const isCurrentApprover = currentPendingStep?.approverEmail === session.user.email;
   const isApplicant = reqData.applicantEmail === session.user.email;
 
@@ -46,7 +47,6 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
     return acc;
   }, {} as Record<number, any[]>);
   const roundNumbers = Object.keys(rounds).map(Number).sort((a, b) => a - b);
-  const maxRound = roundNumbers[roundNumbers.length - 1] || 1;
   const isResubmission = (reqData as any).resubmitCount > 0;
 
   return (

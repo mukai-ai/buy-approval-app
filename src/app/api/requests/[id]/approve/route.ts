@@ -30,16 +30,19 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (!request) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     if (request.status !== 'PENDING') return NextResponse.json({ error: 'Request is already processed' }, { status: 400 });
 
-    // 自分自身のPENDINGなステップを探す
-    const myStep = request.approvalSteps.find((s: any) => s.status === 'PENDING' && s.approverEmail === email);
+    // 最新のラウンドを特定
+    const maxRound = request.approvalSteps.reduce((max: number, s: any) => Math.max(max, s.round || 1), 1);
+
+    // 自分自身のPENDINGなステップを探す（最新ラウンドのみ）
+    const myStep = request.approvalSteps.find((s: any) => s.status === 'PENDING' && s.approverEmail === email && (s.round || 1) === maxRound);
     
     if (!myStep) {
       return NextResponse.json({ error: 'You are not perfectly authorized to approve right now' }, { status: 403 });
     }
 
     // 自分のステップが含まれる order グループの全タスクが "承認可能な状態か (前のタスクが終わっているか)" の確認
-    // 前のグループ (order < myStep.stepOrder) に PENDING や REJECTED があればエラーにする
-    const previousUnfinished = request.approvalSteps.find((s: any) => s.stepOrder < myStep.stepOrder && s.status !== 'APPROVED');
+    // 前のグループ (order < myStep.stepOrder) に PENDING や REJECTED があればエラーにする（最新ラウンドのみ）
+    const previousUnfinished = request.approvalSteps.find((s: any) => (s.round || 1) === maxRound && s.stepOrder < myStep.stepOrder && s.status !== 'APPROVED');
     if (previousUnfinished) {
       return NextResponse.json({ error: 'Previous approval steps are not completed yet' }, { status: 400 });
     }
@@ -70,13 +73,13 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           where: { requestId }
         });
         
-        const sameOrderSteps = updatedSteps.filter((s: any) => s.stepOrder === myStep.stepOrder);
+        const sameOrderSteps = updatedSteps.filter((s: any) => (s.round || 1) === maxRound && s.stepOrder === myStep.stepOrder);
         const isAllSameOrderApproved = sameOrderSteps.every((s: any) => s.status === 'APPROVED');
 
         if (isAllSameOrderApproved) {
           // 次のorderを探す
           const nextOrder = myStep.stepOrder + 1;
-          const nextSteps = updatedSteps.filter((s: any) => s.stepOrder === nextOrder);
+          const nextSteps = updatedSteps.filter((s: any) => (s.round || 1) === maxRound && s.stepOrder === nextOrder);
 
           if (nextSteps.length > 0) {
             nextApprovers = nextSteps.map((s: any) => s.approverEmail);
