@@ -73,16 +73,46 @@ export async function GET(request: Request) {
   const pendingApprovalsTotal = await prisma.approvalStep.count({ where: { approverEmail: email, status: 'PENDING' } });
 
   // 過去の承認履歴 (pastApprovals)
-  const pastApprovals = await prisma.approvalStep.findMany({
-    where: pastWhere,
-    include: { request: true },
-    orderBy: { updatedAt: 'desc' },
-    skip: all ? undefined : skip,
-    take: all ? undefined : limit,
-  });
-  const pastApprovalsTotal = await prisma.approvalStep.count({ 
-    where: pastWhere 
-  });
+  let pastApprovals: any[] = [];
+  let pastApprovalsTotal = 0;
+
+  if (all) {
+    // CSV出力用: 重複排除せず全件取得
+    pastApprovals = await prisma.approvalStep.findMany({
+      where: pastWhere,
+      include: { request: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+    pastApprovalsTotal = pastApprovals.length;
+  } else {
+    // UI表示用: 1申請につき最新の1件のみに絞り込む
+    // まず対象ユーザーの該当するアクションを全件取得（IDと申請ID、更新日時のみ）
+    const allMatchingSteps = await prisma.approvalStep.findMany({
+      where: pastWhere,
+      select: { id: true, requestId: true, updatedAt: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    // メモリ上で申請IDごとに最新のステップIDを抽出
+    const uniqueRequestMap = new Map<string, string>();
+    for (const s of allMatchingSteps) {
+      if (!uniqueRequestMap.has(s.requestId)) {
+        uniqueRequestMap.set(s.requestId, s.id);
+      }
+    }
+    const latestStepIds = Array.from(uniqueRequestMap.values());
+    pastApprovalsTotal = latestStepIds.length;
+
+    // 現在のページに必要なIDのみ抽出
+    const pageStepIds = latestStepIds.slice(skip, skip + limit);
+
+    // 詳細情報を取得
+    pastApprovals = await prisma.approvalStep.findMany({
+      where: { id: { in: pageStepIds } },
+      include: { request: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
 
   return NextResponse.json({ 
     myRequests, 
