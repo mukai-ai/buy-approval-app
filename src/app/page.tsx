@@ -14,6 +14,7 @@ type RequestType = {
   status: string;
   applicantEmail: string;
   createdAt: string;
+  resubmitCount: number;
 };
 
 type ApprovalStepType = {
@@ -344,7 +345,7 @@ export default function HomePage() {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
                   <span className={`${styles.statusBadge} ${getStatusClass(req.status)}`}>
-                    {req.status === "APPROVED" ? "承認済" : req.status === "REJECTED" ? "却下" : "審査中"}
+                    {req.status === "APPROVED" ? "承認済" : req.status === "REJECTED" ? "却下" : req.resubmitCount > 0 ? "審査中（再申請）" : "審査中"}
                   </span>
                   <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "bold" }}>
                     {getTypeLabel(req.type)}

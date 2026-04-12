@@ -164,6 +164,7 @@ export async function POST(request: Request) {
             requestId: createdRequest.id,
             approverEmail: step.email,
             stepOrder: step.order,
+            round: 1,
           },
         });
       }
