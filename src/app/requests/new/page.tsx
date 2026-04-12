@@ -240,17 +240,6 @@ function NewRequestForm() {
         )}
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>{CONFIRMATION_TYPES.includes(type) ? "確認表リンクを添付（もしくはフォルダリンク）" : "参照リンク（Googleドライブ等）"}</label>
-          <input
-            type="url"
-            className={styles.input}
-            value={attachmentLink}
-            onChange={(e) => setAttachmentLink(e.target.value)}
-            placeholder="https://drive.google.com/..."
-          />
-        </div>
-
-        <div className={styles.formGroup}>
           <label className={styles.label}>{CONFIRMATION_TYPES.includes(type) ? "添付資料のファイルorフォルダのパス" : "社内サーバーのファイルパス等"}</label>
           <input
             type="text"

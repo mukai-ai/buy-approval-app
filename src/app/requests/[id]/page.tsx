@@ -88,16 +88,6 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
           </div>
         )}
         <div className={styles.detailRow}>
-          <div className={styles.detailLabel}>{CONFIRMATION_TYPES.includes(reqData.type) ? "確認表リンク（Googleドライブ等）:" : "添付資料リンク:"}</div>
-          <div className={styles.detailValue}>
-            {reqData.attachmentLink ? (
-              <a href={reqData.attachmentLink} target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", textDecoration: "underline" }}>
-                リンクを開く
-              </a>
-            ) : "なし"}
-          </div>
-        </div>
-        <div className={styles.detailRow}>
           <div className={styles.detailLabel}>{CONFIRMATION_TYPES.includes(reqData.type) ? "添付資料のファイルorフォルダのパス:" : "社内サーバーのファイルパス等:"}</div>
           <div className={styles.detailValue}>
             {reqData.attachmentFile || "なし"}
