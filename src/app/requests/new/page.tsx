@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "../../requests.module.css";
 import Link from "next/link";
+import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
 
 function NewRequestForm() {
   const router = useRouter();
@@ -81,8 +82,8 @@ function NewRequestForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || amount === "") {
-      alert("金額を正しく入力してください");
+    if (!title || (!CONFIRMATION_TYPES.includes(type) && amount === "")) {
+      alert("必須項目を正しく入力してください");
       return;
     }
     
@@ -91,7 +92,7 @@ function NewRequestForm() {
       const formData = new FormData();
       formData.append("type", type);
       formData.append("title", title);
-      formData.append("amount", amount.toString());
+      formData.append("amount", CONFIRMATION_TYPES.includes(type) ? "0" : amount.toString());
       if (attachmentLink) formData.append("attachmentLink", attachmentLink);
       if (attachmentFile) formData.append("attachmentFile", attachmentFile);
 
@@ -99,6 +100,9 @@ function NewRequestForm() {
         if (companyName) formData.append("companyName", companyName);
         if (startDate) formData.append("startDate", new Date(startDate).toISOString());
         if (endDate) formData.append("endDate", new Date(endDate).toISOString());
+      }
+      if (CONFIRMATION_TYPES.includes(type)) {
+        if (startDate) formData.append("startDate", new Date(startDate).toISOString());
       }
 
       const res = await fetch("/api/requests", {
@@ -133,6 +137,12 @@ function NewRequestForm() {
           >
             <option value="BUY">買付承認</option>
             <option value="REFORM">リフォーム承認</option>
+            <option value="CONTRACT">仕入契約確認表</option>
+            <option value="PURCHASE_SETTLEMENT">仕入決済確認表</option>
+            <option value="BROKER_CONTRACT">仲介契約確認表</option>
+            <option value="BROKER_SETTLEMENT">仲介決済確認表</option>
+            <option value="SELL_CONTRACT">売却契約確認表</option>
+            <option value="SELL_SETTLEMENT">売却決済確認表</option>
           </select>
         </div>
 
@@ -144,7 +154,7 @@ function NewRequestForm() {
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={`例: ${type === "BUY" ? "港区〇〇ビル 買付" : "港区〇〇ビル 内装リフォーム"}`}
+            placeholder={`例: ${type === "BUY" ? "港区〇〇ビル 買付" : CONFIRMATION_TYPES.includes(type) ? "〇〇プロジェクト " + getTypeLabel(type) : "港区〇〇ビル 内装リフォーム"}`}
           />
         </div>
 
@@ -183,50 +193,54 @@ function NewRequestForm() {
           </>
         )}
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>金額（円）</label>
-          <div style={{ position: "relative" }}>
+        {CONFIRMATION_TYPES.includes(type) && (
+          <div className={styles.formGroup}>
+            <label className={styles.label}>{getDateLabel(type)}</label>
             <input
-              type="text"
+              type="date"
               className={styles.input}
               required
-              value={inputValue}
-              onChange={(e) => handleAmountChange(e.target.value)}
-              placeholder="例: 1500万 または 15000000"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
             />
-            {amount !== "" && (
-              <div style={{
-                marginTop: "0.5rem",
-                fontSize: "1rem",
-                fontWeight: "bold",
-                color: "#166534",
-                padding: "0.5rem",
-                backgroundColor: "#f0fdf4",
-                borderRadius: "4px",
-                border: "1px solid #bbf7d0"
-              }}>
-                プレビュー: {formatToJapanese(amount)} ({amount.toLocaleString()}円)
-              </div>
-            )}
           </div>
-          <p style={{ fontSize: "0.875rem", color: "#64748b", marginTop: "0.5rem" }}>
-            ※「万」や「億」を使った入力も可能です（例：1500万）。
-          </p>
-        </div>
+        )}
+
+        {!CONFIRMATION_TYPES.includes(type) && (
+          <div className={styles.formGroup}>
+            <label className={styles.label}>金額（円）</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                className={styles.input}
+                required
+                value={inputValue}
+                onChange={(e) => handleAmountChange(e.target.value)}
+                placeholder="例: 1500万 または 15000000"
+              />
+              {amount !== "" && (
+                <div style={{
+                  marginTop: "0.5rem",
+                  fontSize: "1rem",
+                  fontWeight: "bold",
+                  color: "#166534",
+                  padding: "0.5rem",
+                  backgroundColor: "#f0fdf4",
+                  borderRadius: "4px",
+                  border: "1px solid #bbf7d0"
+                }}>
+                  プレビュー: {formatToJapanese(amount)} ({amount.toLocaleString()}円)
+                </div>
+              )}
+            </div>
+            <p style={{ fontSize: "0.875rem", color: "#64748b", marginTop: "0.5rem" }}>
+              ※「万」や「億」を使った入力も可能です（例：1500万）。
+            </p>
+          </div>
+        )}
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>参照リンク（Googleドライブ等）</label>
-          <input
-            type="url"
-            className={styles.input}
-            value={attachmentLink}
-            onChange={(e) => setAttachmentLink(e.target.value)}
-            placeholder="https://drive.google.com/..."
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label className={styles.label}>社内サーバーのファイルパス等</label>
+          <label className={styles.label}>{CONFIRMATION_TYPES.includes(type) ? "添付資料のファイルorフォルダのパス" : "社内サーバーのファイルパス等"}</label>
           <input
             type="text"
             className={styles.input}

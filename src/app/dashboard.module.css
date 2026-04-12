@@ -28,7 +28,7 @@
 .title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1e40af;
+  color: #2563eb;
   margin: 0;
 }
 .loginCard {
@@ -44,7 +44,7 @@
   text-align: center;
 }
 .button {
-  background-color: #2563eb;
+  background-color: #ec4899;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -54,7 +54,7 @@
   transition: all 0.2s;
 }
 .button:hover {
-  background-color: #1d4ed8;
+  background-color: #db2777;
   transform: translateY(-1px);
 }
 .buttonOutline {
