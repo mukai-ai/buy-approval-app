@@ -1,7 +1,7 @@
 :root {
   --primary: #2563eb;
   --bg-color: #f8fafc;
-  --text-color: #0f172a;
+  --text-color: #1d4ed8;
 }
 * { box-sizing: border-box; }
 body {

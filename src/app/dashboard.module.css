@@ -28,7 +28,7 @@
 .title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #1e40af;
   margin: 0;
 }
 .loginCard {
@@ -76,10 +76,10 @@
   gap: 2rem;
 }
 .sectionTitle {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
-  color: #334155;
+  color: #2563eb;
   border-bottom: 2px solid #e2e8f0;
   padding-bottom: 0.5rem;
 }
@@ -105,7 +105,7 @@
 .cardMeta {
   display: flex;
   justify-content: space-between;
-  color: #64748b;
+  color: #1d4ed8;
   font-size: 0.875rem;
 }
 .statusBadge {
