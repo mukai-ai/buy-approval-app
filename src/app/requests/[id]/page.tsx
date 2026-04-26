@@ -59,7 +59,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
         </div>
         <div className={styles.detailRow}>
           <div className={styles.detailLabel}>日付:</div>
-          <div className={styles.detailValue}>{new Date(reqData.createdAt).toLocaleString()}</div>
+          <div className={styles.detailValue}>{new Date(reqData.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</div>
         </div>
         <div className={styles.detailRow}>
           <div className={styles.detailLabel}>申請区分:</div>
@@ -151,7 +151,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
                     </div>
                     {step.status !== "PENDING" && (
                       <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
-                        {new Date(step.updatedAt).toLocaleString()}
+                        {new Date(step.updatedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
                       </div>
                     )}
                   </div>

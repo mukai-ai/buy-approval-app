@@ -97,7 +97,7 @@ export default function HomePage() {
           `"${getTypeLabel(step.request.type).replace("承認", "")}"`,
           step.request.amount,
           `"${step.status === 'APPROVED' ? '承認' : '却下'}"`,
-          `"${new Date(step.updatedAt).toLocaleString()}"`,
+          `"${new Date(step.updatedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}"`,
           `"${(step.comment || '').replace(/"/g, '""')}"`
         ];
         csvContent += row.join(",") + "\n";
@@ -143,7 +143,7 @@ export default function HomePage() {
           `"${getTypeLabel(req.type)}"`,
           req.amount,
           `"${req.status === 'APPROVED' ? '承認済' : req.status === 'REJECTED' ? '却下' : '審査中'}"`,
-          `"${new Date(req.createdAt).toLocaleString()}"`
+          `"${new Date(req.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}"`
         ];
         csvContent += row.join(",") + "\n";
       });
@@ -279,7 +279,7 @@ export default function HomePage() {
                   <div className={styles.cardMeta} style={{ display: "flex", justifyContent: "space-between" }}>
                     <span>申請者: {step.request.applicantEmail}</span>
                     <span style={{ fontSize: "0.875rem", color: "#64748b" }}>
-                      時刻: {new Date(step.updatedAt).toLocaleString()}
+                      時刻: {new Date(step.updatedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
                     </span>
                   </div>
                 </div>
@@ -353,7 +353,7 @@ export default function HomePage() {
                 </div>
                 <h3 className={styles.cardTitle}>{req.title}</h3>
                 <div className={styles.cardMeta}>
-                  <span>日付: {new Date(req.createdAt).toLocaleDateString()}</span>
+                  <span>時刻: {new Date(req.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</span>
                 </div>
               </div>
             ))

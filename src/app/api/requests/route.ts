@@ -211,7 +211,7 @@ export async function POST(request: Request) {
     
     let specificInfoLine = '';
     if (CONFIRMATION_TYPES.includes(type)) {
-      const formattedDate = startDate ? new Date(startDate).toLocaleDateString("ja-JP") : "未入力";
+      const formattedDate = startDate ? new Date(startDate).toLocaleDateString("ja-JP", { timeZone: 'Asia/Tokyo' }) : "未入力";
       specificInfoLine = `${getDateLabel(type)}: ${formattedDate}\n`;
     } else {
       specificInfoLine = `金額: ${amount.toLocaleString()}円\n`;
