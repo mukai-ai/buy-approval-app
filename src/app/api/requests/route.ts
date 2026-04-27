@@ -63,14 +63,23 @@ export async function GET(request: Request) {
   const myRequestsTotal = await prisma.request.count({ where: myWhere });
 
   // 承認依頼 (pendingApprovals)
-  const pendingApprovals = await prisma.approvalStep.findMany({
-    where: { approverEmail: email, status: 'PENDING' },
+  const allPendingApprovals = await prisma.approvalStep.findMany({
+    where: { 
+      approverEmail: email, 
+      status: 'PENDING',
+      request: { status: 'PENDING' } // 完了・却下済みのものは除外
+    },
     include: { request: true },
     orderBy: { createdAt: 'desc' },
-    skip: all ? undefined : skip,
-    take: all ? undefined : limit,
   });
-  const pendingApprovalsTotal = await prisma.approvalStep.count({ where: { approverEmail: email, status: 'PENDING' } });
+
+  // 最新ラウンドのものだけに絞り込む (再申請時の古いラウンドの残骸を除外)
+  const filteredPending = allPendingApprovals.filter(step => 
+    (step.round || 1) === (step.request.resubmitCount + 1)
+  );
+
+  const pendingApprovalsTotal = filteredPending.length;
+  const pendingApprovals = all ? filteredPending : filteredPending.slice(skip, skip + limit);
 
   // 過去の承認履歴 (pastApprovals)
   let pastApprovals: any[] = [];
