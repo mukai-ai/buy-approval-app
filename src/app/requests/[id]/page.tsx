@@ -157,7 +157,15 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
                   </div>
                 </div>
                 {step.comment && (
-                  <div style={{ padding: "0.5rem", background: "#f1f5f9", borderRadius: "4px", fontSize: "0.875rem", color: "#475569" }}>
+                  <div style={{ 
+                    padding: "0.5rem", 
+                    background: "#f1f5f9", 
+                    borderRadius: "4px", 
+                    fontSize: "0.875rem", 
+                    color: "#475569",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-all"
+                  }}>
                     コメント: {step.comment}
                   </div>
                 )}
