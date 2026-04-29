@@ -33,6 +33,7 @@ export default function RequestActions({
   );
   const [amount, setAmount] = useState(requestData.amount?.toString() || "");
   const [companyName, setCompanyName] = useState(requestData.companyName || "");
+  const [applicantComment, setApplicantComment] = useState(requestData.applicantComment || "");
 
   const isConfirmationType = CONFIRMATION_TYPES.includes(requestData.type);
 
@@ -62,7 +63,14 @@ export default function RequestActions({
       const res = await fetch(`/api/requests/${requestId}/resubmit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, startDate, attachmentFile, amount, companyName }),
+        body: JSON.stringify({ 
+          title, 
+          startDate, 
+          attachmentFile, 
+          amount, 
+          companyName,
+          applicantComment: requestData.type === 'BUY' ? applicantComment : undefined
+        }),
       });
       if (res.ok) {
         router.refresh();
@@ -178,6 +186,19 @@ export default function RequestActions({
                 onChange={(e) => setAttachmentFile(e.target.value)}
               />
             </div>
+
+            {requestData.type === 'BUY' && (
+              <div className={styles.formGroup}>
+                <label className={styles.label}>承認者へのコメント（任意）</label>
+                <textarea
+                  className={styles.textarea}
+                  rows={4}
+                  value={applicantComment}
+                  onChange={(e) => setApplicantComment(e.target.value)}
+                  placeholder="承認者へ伝えたいことがあれば入力してください"
+                />
+              </div>
+            )}
 
             <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
               <button type="submit" className={styles.button} disabled={isSubmitting}>

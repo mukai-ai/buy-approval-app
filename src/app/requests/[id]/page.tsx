@@ -104,6 +104,14 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             {reqData.attachmentFile || "なし"}
           </div>
         </div>
+        {reqData.type === 'BUY' && reqData.applicantComment && (
+          <div className={styles.detailRow}>
+            <div className={styles.detailLabel}>申請者コメント:</div>
+            <div className={styles.detailValue}>
+              {reqData.applicantComment}
+            </div>
+          </div>
+        )}
         <div className={styles.detailRow}>
           <div className={styles.detailLabel}>全体ステータス:</div>
           <div className={styles.detailValue}>

@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const body = await req.json();
-    const { title, startDate, attachmentFile, amount, companyName } = body;
+    const { title, startDate, attachmentFile, amount, companyName, applicantComment } = body;
 
     const nextRound = existing.resubmitCount + 2; // 現在のラウンド+1（再申請=2回目以降）
 
@@ -58,6 +58,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           companyName: companyName !== undefined ? companyName : existing.companyName,
           status: 'PENDING',
           resubmitCount: existing.resubmitCount + 1,
+          applicantComment: existing.type === 'BUY' ? applicantComment : existing.applicantComment,
         }
       });
 
@@ -89,6 +90,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     } else {
       const amt = updatedRequest?.amount ?? existing.amount;
       specificInfoLine = `金額: ${amt.toLocaleString()}円\n`;
+    }
+
+    if (existing.type === 'BUY' && updatedRequest?.applicantComment) {
+      specificInfoLine += `申請者コメント: ${updatedRequest.applicantComment}\n`;
     }
 
     const firstApprovers = [...new Set(uniqueSteps.filter(s => s.order === 1).map(s => s.email))];

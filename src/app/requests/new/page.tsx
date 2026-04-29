@@ -19,6 +19,7 @@ function NewRequestForm() {
   const [endDate, setEndDate] = useState("");
   const [attachmentLink, setAttachmentLink] = useState("");
   const [attachmentFile, setAttachmentFile] = useState("");
+  const [applicantComment, setApplicantComment] = useState("");
 
   useEffect(() => {
     // 再申請（コピー）時のパラメータ読み込み
@@ -95,6 +96,9 @@ function NewRequestForm() {
       formData.append("amount", CONFIRMATION_TYPES.includes(type) ? "0" : amount.toString());
       if (attachmentLink) formData.append("attachmentLink", attachmentLink);
       if (attachmentFile) formData.append("attachmentFile", attachmentFile);
+      if (type === "BUY") {
+        formData.append("applicantComment", applicantComment);
+      }
 
       if (type === "REFORM") {
         if (companyName) formData.append("companyName", companyName);
@@ -249,6 +253,19 @@ function NewRequestForm() {
             placeholder="例: Z:\プロジェクト資料\2024\見積書.pdf"
           />
         </div>
+        
+        {type === "BUY" && (
+          <div className={styles.formGroup}>
+            <label className={styles.label}>承認者へのコメント（任意）</label>
+            <textarea
+              className={styles.textarea}
+              rows={4}
+              value={applicantComment}
+              onChange={(e) => setApplicantComment(e.target.value)}
+              placeholder="承認者へ伝えたいことがあれば入力してください"
+            />
+          </div>
+        )}
 
         <div className={styles.buttonGroup}>
           <button type="submit" className={styles.button} disabled={loading}>

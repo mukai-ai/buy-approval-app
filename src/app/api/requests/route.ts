@@ -151,6 +151,7 @@ export async function POST(request: Request) {
     const endDate = formData.get('endDate') as string | null;
     const attachmentLink = formData.get('attachmentLink') as string | null;
     const attachmentFile = formData.get('attachmentFile') as string | null;
+    const applicantComment = formData.get('applicantComment') as string | null;
 
     if (!title || !type) {
       return NextResponse.json({ error: 'Require title and type' }, { status: 400 });
@@ -194,6 +195,7 @@ export async function POST(request: Request) {
           attachmentLink,
           attachmentFile: attachmentFile, // 直接テキストとして保存
           applicantEmail: session.user!.email!,
+          applicantComment: type === 'BUY' ? applicantComment : null,
         },
       });
 
@@ -224,6 +226,10 @@ export async function POST(request: Request) {
       specificInfoLine = `${getDateLabel(type)}: ${formattedDate}\n`;
     } else {
       specificInfoLine = `金額: ${amount.toLocaleString()}円\n`;
+    }
+
+    if (type === 'BUY' && applicantComment) {
+      specificInfoLine += `申請者コメント: ${applicantComment}\n`;
     }
     
     for (const approver of firstApprovers) {

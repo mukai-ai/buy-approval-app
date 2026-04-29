@@ -67,6 +67,7 @@ model Request {
   attachmentFile String?        // アップロードファイルの保存パス
   applicantEmail String
   status         String         @default("PENDING") // PENDING, APPROVED, REJECTED
+  applicantComment String?      // 申請者からの追加コメント
   resubmitCount  Int            @default(0)          // 再申請回数
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
