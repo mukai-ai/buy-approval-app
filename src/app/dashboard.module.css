@@ -44,7 +44,7 @@
   text-align: center;
 }
 .button {
-  background-color: #ec4899;
+  background-color: #2563eb;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -54,7 +54,7 @@
   transition: all 0.2s;
 }
 .button:hover {
-  background-color: #db2777;
+  background-color: #1d4ed8;
   transform: translateY(-1px);
 }
 .buttonOutline {
