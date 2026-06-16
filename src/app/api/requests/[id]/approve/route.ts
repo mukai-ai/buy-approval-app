@@ -14,7 +14,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   }
 
   const requestId = params.id;
-  const { action, comment } = await req.json(); // 'APPROVE' | 'REJECT'
+  const { action, comment, targetStepId } = await req.json(); // 'APPROVE' | 'REJECT'
   const email = session.user.email;
 
   if (action !== 'APPROVED' && action !== 'REJECTED') {
@@ -34,7 +34,21 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const maxRound = request.approvalSteps.reduce((max: number, s: any) => Math.max(max, s.round || 1), 1);
 
     // 自分自身のPENDINGなステップを探す（最新ラウンドのみ）
-    const myStep = request.approvalSteps.find((s: any) => s.status === 'PENDING' && s.approverEmail === email && (s.round || 1) === maxRound);
+    // 総務（info@tokyomf.co.jp）は任意のPENDINGステップを代理承認・却下可能
+    const isAdminUser = email === 'info@tokyomf.co.jp';
+    let myStep: any;
+    if (isAdminUser) {
+      // 総務: フロントから targetStepId を受け取り、指定のPENDINGステップを代理処理
+      if (targetStepId) {
+        myStep = request.approvalSteps.find((s: any) => s.id === targetStepId && s.status === 'PENDING' && (s.round || 1) === maxRound);
+      }
+      if (!myStep) {
+        // targetStepId が未指定または見つからない場合は最初の PENDING ステップを探す
+        myStep = request.approvalSteps.find((s: any) => s.status === 'PENDING' && (s.round || 1) === maxRound);
+      }
+    } else {
+      myStep = request.approvalSteps.find((s: any) => s.status === 'PENDING' && s.approverEmail === email && (s.round || 1) === maxRound);
+    }
     
     if (!myStep) {
       return NextResponse.json({ error: 'You are not perfectly authorized to approve right now' }, { status: 403 });
@@ -42,9 +56,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // 自分のステップが含まれる order グループの全タスクが "承認可能な状態か (前のタスクが終わっているか)" の確認
     // 前のグループ (order < myStep.stepOrder) に PENDING や REJECTED があればエラーにする（最新ラウンドのみ）
-    const previousUnfinished = request.approvalSteps.find((s: any) => (s.round || 1) === maxRound && s.stepOrder < myStep.stepOrder && s.status !== 'APPROVED');
-    if (previousUnfinished) {
-      return NextResponse.json({ error: 'Previous approval steps are not completed yet' }, { status: 400 });
+    // 総務の場合はこのチェックをスキップ（全ステップ処理可能）
+    if (!isAdminUser) {
+      const previousUnfinished = request.approvalSteps.find((s: any) => (s.round || 1) === maxRound && s.stepOrder < myStep.stepOrder && s.status !== 'APPROVED');
+      if (previousUnfinished) {
+        return NextResponse.json({ error: 'Previous approval steps are not completed yet' }, { status: 400 });
+      }
     }
 
     let isRequestRejected = false;
@@ -104,7 +121,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const url = `${baseUrl}/requests/${requestId}`;
 
     let specificInfoLine = '';
-    if (CONFIRMATION_TYPES.includes(request.type)) {
+    if (request.type === 'FACILITY') {
+      const startFmt = request.startDate ? new Date(request.startDate).toLocaleDateString("ja-JP") : "未入力";
+      const endFmt = request.endDate ? new Date(request.endDate).toLocaleDateString("ja-JP") : "未入力";
+      specificInfoLine = `利用施設: ${request.facilityName || "未指定"}\n利用期間: ${startFmt} 〜 ${endFmt}\n利用人数: ${request.peopleCount || 1}名\n同伴者: ${request.companions || "なし"}\n利用目的: ${request.purpose === 'BUSINESS' ? '接待利用' : '私的利用'}\n`;
+    } else if (CONFIRMATION_TYPES.includes(request.type)) {
       const formattedDate = request.startDate ? new Date(request.startDate).toLocaleDateString("ja-JP") : "未入力";
       specificInfoLine = `${getDateLabel(request.type)}: ${formattedDate}\n`;
     } else {
@@ -120,10 +141,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         email || undefined
       );
     } else if (isRequestApproved) {
+      const isFacility = request.type === 'FACILITY';
+      const extraGuide = isFacility ? '\n\n承認されましたので、システムにログインして予約カレンダーを確認し、必要に応じてGoogleカレンダーへの追加を行ってください。また、利用完了後は利用報告の提出をお願いします。' : '';
       await sendNotificationEmail(
         request.applicantEmail,
         `【${getTypeLabel(request.type)}：完了】${request.title}`,
-        `申請がすべての承認者により承認されました。\n申請区分: ${getTypeLabel(request.type)}\n申請者: ${request.applicantEmail}\n${specificInfoLine}承認者（最終）: ${email}\n時刻: ${now}\nURL: ${url}`,
+        `申請がすべての承認者により承認されました。\n申請区分: ${getTypeLabel(request.type)}\n申請者: ${request.applicantEmail}\n${specificInfoLine}承認者（最終）: ${email}\n時刻: ${now}\nURL: ${url}${extraGuide}`,
         session.user.name || email || undefined,
         email || undefined
       );

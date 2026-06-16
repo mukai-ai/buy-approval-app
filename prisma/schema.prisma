@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("NEON_POSTGRES_PRISMA_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // NextAuth用モデル
@@ -71,6 +71,13 @@ model Request {
   resubmitCount  Int            @default(0)          // 再申請回数
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
+
+  // 福利厚生施設利用用の追加フィールド
+  facilityName   String?
+  peopleCount    Int?
+  companions     String?
+  purpose        String?        // "PRIVATE" or "BUSINESS"
+  report         String?        // 利用後の事後報告
 
   applicant      User           @relation(fields: [applicantEmail], references: [email], onDelete: Cascade)
   approvalSteps  ApprovalStep[]

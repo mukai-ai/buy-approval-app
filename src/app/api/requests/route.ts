@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get('limit') || '5');
   const all = searchParams.get('all') === 'true';
   const search = searchParams.get('search') || '';
+  const category = searchParams.get('category') || 'all'; // 'workflow' | 'facility' | 'all'
   
   const myPage = parseInt(searchParams.get('myPage') || '1');
   const myLimit = parseInt(searchParams.get('myLimit') || '5');
@@ -28,28 +29,62 @@ export async function GET(request: Request) {
   const skip = (page - 1) * limit;
   const mySkip = (myPage - 1) * myLimit;
 
+  // category によるフィルター条件
+  const categoryFilter: any =
+    category === 'workflow' ? { type: { not: 'FACILITY' } } :
+    category === 'facility' ? { type: 'FACILITY' } :
+    {};
+
+  // === 総務用: 全 FACILITY 申請を返す ===
+  const adminView = searchParams.get('adminView') === 'true';
+  if (adminView && email === 'info@tokyomf.co.jp') {
+    const searchVal = search || '';
+    const whereAll: any = { type: 'FACILITY' };
+    if (searchVal) {
+      whereAll.OR = [
+        { title: { contains: searchVal, mode: 'insensitive' } },
+        { applicantEmail: { contains: searchVal, mode: 'insensitive' } },
+        { facilityName: { contains: searchVal, mode: 'insensitive' } },
+      ];
+    }
+    const allRequests = await prisma.request.findMany({
+      where: whereAll,
+      include: { approvalSteps: { orderBy: { stepOrder: 'asc' } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    return NextResponse.json({ allRequests });
+  }
+
   // 検索条件の構築 (過去の承認履歴用)
   const pastWhere: any = {
     approverEmail: email,
     status: { in: ['APPROVED', 'REJECTED'] },
   };
 
-  if (search) {
+  if (search || category !== 'all') {
     pastWhere.request = {
-      OR: [
-        { title: { contains: search, mode: 'insensitive' } },
-        { applicantEmail: { contains: search, mode: 'insensitive' } },
-      ],
+      ...categoryFilter,
+      ...(search ? {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { applicantEmail: { contains: search, mode: 'insensitive' } },
+          { facilityName: { contains: search, mode: 'insensitive' } },
+        ],
+      } : {}),
     };
   }
 
   // 検索条件の構築 (自分の申請状況用)
   const myWhere: any = {
     applicantEmail: email,
+    ...categoryFilter,
   };
 
   if (mySearch) {
-    myWhere.title = { contains: mySearch, mode: 'insensitive' };
+    myWhere.OR = [
+      { title: { contains: mySearch, mode: 'insensitive' } },
+      { facilityName: { contains: mySearch, mode: 'insensitive' } },
+    ];
   }
 
   // 自分の申請状況 (myRequests)
@@ -63,23 +98,33 @@ export async function GET(request: Request) {
   const myRequestsTotal = await prisma.request.count({ where: myWhere });
 
   // 承認依頼 (pendingApprovals)
+  const pendingFilter: any = category !== 'all' ? { request: { ...categoryFilter, status: 'PENDING' } } : { request: { status: 'PENDING' } };
   const allPendingApprovals = await prisma.approvalStep.findMany({
     where: { 
       approverEmail: email, 
       status: 'PENDING',
-      request: { status: 'PENDING' } // 完了・却下済みのものは除外
+      ...pendingFilter,
     },
-    include: { request: true },
+    include: { request: { include: { approvalSteps: true } } },
     orderBy: { createdAt: 'desc' },
   });
 
-  // 最新ラウンドのものだけに絞り込む (再申請時の古いラウンドの残骸を除外)
-  const filteredPending = allPendingApprovals.filter(step => 
-    (step.round || 1) === (step.request.resubmitCount + 1)
-  );
+  // 最新ラウンドかつ前のステップが全て承認済みのものだけに絞り込む
+  // (再申請時の古いラウンドの残骸を除外 + 総務確認前の案件を部長・事務長へ表示しない)
+  const filteredPending = allPendingApprovals.filter(step => {
+    const req = step.request as any;
+    const maxRound = req.resubmitCount + 1;
+    if ((step.round || 1) !== maxRound) return false;
+    // 前のstepOrderのステップが全て APPROVED か確認
+    const previousUnfinished = req.approvalSteps.find((s: any) =>
+      (s.round || 1) === maxRound && s.stepOrder < step.stepOrder && s.status !== 'APPROVED'
+    );
+    return !previousUnfinished;
+  });
 
   const pendingApprovalsTotal = filteredPending.length;
   const pendingApprovals = all ? filteredPending : filteredPending.slice(skip, skip + limit);
+
 
   // 過去の承認履歴 (pastApprovals)
   let pastApprovals: any[] = [];
@@ -153,6 +198,13 @@ export async function POST(request: Request) {
     const attachmentFile = formData.get('attachmentFile') as string | null;
     const applicantComment = formData.get('applicantComment') as string | null;
 
+    // 福利厚生施設用の追加パラメータ
+    const facilityName = formData.get('facilityName') as string | null;
+    const peopleCountStr = formData.get('peopleCount') as string | null;
+    const peopleCount = peopleCountStr ? parseInt(peopleCountStr) : null;
+    const companions = formData.get('companions') as string | null;
+    const purpose = formData.get('purpose') as string | null;
+
     if (!title || !type) {
       return NextResponse.json({ error: 'Require title and type' }, { status: 400 });
     }
@@ -181,6 +233,13 @@ export async function POST(request: Request) {
       flow.push({ email: 'satou@tokyomf.co.jp', order: 2 });
       flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 3 });
       flow.push({ email: 'otsuka@tokyomf.co.jp', order: 4 });
+    } else if (type === 'FACILITY') {
+      flow.push({ email: 'info@tokyomf.co.jp', order: 1 });
+      if (purpose === 'BUSINESS') {
+        flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 2 });
+      } else {
+        flow.push({ email: 'satou@tokyomf.co.jp', order: 2 });
+      }
     }
 
     const newRequest = await prisma.$transaction(async (tx: any) => {
@@ -195,7 +254,12 @@ export async function POST(request: Request) {
           attachmentLink,
           attachmentFile: attachmentFile, // 直接テキストとして保存
           applicantEmail: session.user!.email!,
-          applicantComment: type === 'BUY' ? applicantComment : null,
+          applicantComment: (type === 'BUY' || type === 'FACILITY') ? applicantComment : null,
+          // 福利厚生用
+          facilityName,
+          peopleCount,
+          companions,
+          purpose,
         },
       });
 
@@ -221,15 +285,21 @@ export async function POST(request: Request) {
     const url = `${baseUrl}/requests/${newRequest.id}`;
     
     let specificInfoLine = '';
-    if (CONFIRMATION_TYPES.includes(type)) {
+    if (type === 'FACILITY') {
+      const startFmt = startDate ? new Date(startDate).toLocaleDateString("ja-JP") : "未入力";
+      const endFmt = endDate ? new Date(endDate).toLocaleDateString("ja-JP") : "未入力";
+      specificInfoLine = `利用施設: ${facilityName || "未指定"}\n利用期間: ${startFmt} 〜 ${endFmt}\n利用人数: ${peopleCount || 1}名\n同伴者: ${companions || "なし"}\n利用目的: ${purpose === 'BUSINESS' ? '接待利用' : '私的利用'}\n`;
+      if (applicantComment) {
+        specificInfoLine += `申請者コメント: ${applicantComment}\n`;
+      }
+    } else if (CONFIRMATION_TYPES.includes(type)) {
       const formattedDate = startDate ? new Date(startDate).toLocaleDateString("ja-JP", { timeZone: 'Asia/Tokyo' }) : "未入力";
       specificInfoLine = `${getDateLabel(type)}: ${formattedDate}\n`;
     } else {
       specificInfoLine = `金額: ${amount.toLocaleString()}円\n`;
-    }
-
-    if (type === 'BUY' && applicantComment) {
-      specificInfoLine += `申請者コメント: ${applicantComment}\n`;
+      if (type === 'BUY' && applicantComment) {
+        specificInfoLine += `申請者コメント: ${applicantComment}\n`;
+      }
     }
     
     for (const approver of firstApprovers) {

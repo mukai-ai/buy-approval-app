@@ -166,24 +166,8 @@ export default function HomePage() {
     }
   };
 
-  if (status === "loading" || (status === "authenticated" && initialLoading)) { // Changed condition to use initialLoading
+  if (initialLoading) {
     return <div className={styles.container}>Loading...</div>;
-  }
-
-  if (status === "unauthenticated") {
-    return (
-      <div className={styles.loginContainer}>
-        <div className={styles.loginCard}>
-          <h1 style={{ marginBottom: "1rem", color: "#2563eb" }}>承認ワークフロー</h1>
-          <p style={{ color: "#64748b", marginBottom: "2rem", lineHeight: "1.6" }}>
-            システムを利用するにはGoogleアカウント<br />でログインしてください。
-          </p>
-          <button className={styles.button} onClick={() => signIn("google")}>
-            Googleでログイン
-          </button>
-        </div>
-      </div>
-    );
   }
 
   const getStatusClass = (reqStatus: string) => {
@@ -193,7 +177,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className={styles.container} style={{ opacity: loading ? 0.7 : 1, transition: "opacity 0.2s" }}> {/* Added opacity for re-fetches */}
+    <div className={styles.container} style={{ opacity: loading ? 0.7 : 1, transition: "opacity 0.2s" }}>
       <header className={styles.header}>
         <div style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem" }}>
           <h1 className={styles.title}>ダッシュボード</h1>
@@ -250,7 +234,7 @@ export default function HomePage() {
               </button>
               <input
                 type="text"
-                placeholder="キーワード検索..." // Placeholder already correct
+                placeholder="キーワード検索..."
                 className={styles.input}
                 style={{ width: "180px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
                 value={filterText}

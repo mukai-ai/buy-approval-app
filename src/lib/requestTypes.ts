@@ -16,6 +16,7 @@ export const REQUEST_TYPE_LABELS: Record<string, string> = {
   BROKER_SETTLEMENT: "仲介決済確認表",
   SELL_CONTRACT: "売却契約確認表",
   SELL_SETTLEMENT: "売却決済確認表",
+  FACILITY: "福利厚生施設利用申請",
 };
 
 export const getTypeLabel = (type: string) => REQUEST_TYPE_LABELS[type] || type;

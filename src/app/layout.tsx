@@ -1,6 +1,7 @@
 import './globals.css';
 import { ReactNode } from 'react';
 import { Providers } from '../components/Providers';
+import MainLayout from './components/MainLayout';
 
 export const metadata = {
   title: '承認ワークフロー',
@@ -12,7 +13,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="ja">
       <body>
         <Providers>
-          <main>{children}</main>
+          <MainLayout>{children}</MainLayout>
         </Providers>
       </body>
     </html>

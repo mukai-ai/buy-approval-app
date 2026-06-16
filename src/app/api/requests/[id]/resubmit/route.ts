@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     }
 
     const body = await req.json();
-    const { title, startDate, attachmentFile, amount, companyName, applicantComment } = body;
+    const { title, startDate, endDate, attachmentFile, amount, companyName, applicantComment, facilityName, peopleCount, companions, purpose } = body;
 
     const nextRound = existing.resubmitCount + 2; // 現在のラウンド+1（再申請=2回目以降）
 
@@ -53,12 +53,18 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         data: {
           title: title || existing.title,
           startDate: startDate ? new Date(startDate) : existing.startDate,
+          endDate: endDate ? new Date(endDate) : existing.endDate,
           attachmentFile: attachmentFile !== undefined ? attachmentFile : existing.attachmentFile,
           amount: amount !== undefined ? parseFloat(amount) : existing.amount,
           companyName: companyName !== undefined ? companyName : existing.companyName,
           status: 'PENDING',
           resubmitCount: existing.resubmitCount + 1,
-          applicantComment: existing.type === 'BUY' ? applicantComment : existing.applicantComment,
+          applicantComment: (existing.type === 'BUY' || existing.type === 'FACILITY') ? applicantComment : existing.applicantComment,
+          // 福利厚生用
+          facilityName: facilityName !== undefined ? facilityName : existing.facilityName,
+          peopleCount: peopleCount !== undefined ? parseInt(peopleCount) : existing.peopleCount,
+          companions: companions !== undefined ? companions : existing.companions,
+          purpose: purpose !== undefined ? purpose : existing.purpose,
         }
       });
 
@@ -83,17 +89,23 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const updatedRequest = await prisma.request.findUnique({ where: { id: requestId } });
     let specificInfoLine = '';
-    if (CONFIRMATION_TYPES.includes(existing.type)) {
+    if (existing.type === 'FACILITY' && updatedRequest) {
+      const startFmt = updatedRequest.startDate ? new Date(updatedRequest.startDate).toLocaleDateString("ja-JP") : "未入力";
+      const endFmt = updatedRequest.endDate ? new Date(updatedRequest.endDate).toLocaleDateString("ja-JP") : "未入力";
+      specificInfoLine = `利用施設: ${updatedRequest.facilityName || "未指定"}\n利用期間: ${startFmt} 〜 ${endFmt}\n利用人数: ${updatedRequest.peopleCount || 1}名\n同伴者: ${updatedRequest.companions || "なし"}\n利用目的: ${updatedRequest.purpose === 'BUSINESS' ? '接待利用' : '私的利用'}\n`;
+      if (updatedRequest.applicantComment) {
+        specificInfoLine += `申請者コメント: ${updatedRequest.applicantComment}\n`;
+      }
+    } else if (CONFIRMATION_TYPES.includes(existing.type)) {
       const d = updatedRequest?.startDate;
       const formattedDate = d ? new Date(d).toLocaleDateString('ja-JP') : '未入力';
       specificInfoLine = `${getDateLabel(existing.type)}: ${formattedDate}\n`;
     } else {
       const amt = updatedRequest?.amount ?? existing.amount;
       specificInfoLine = `金額: ${amt.toLocaleString()}円\n`;
-    }
-
-    if (existing.type === 'BUY' && updatedRequest?.applicantComment) {
-      specificInfoLine += `申請者コメント: ${updatedRequest.applicantComment}\n`;
+      if (existing.type === 'BUY' && updatedRequest?.applicantComment) {
+        specificInfoLine += `申請者コメント: ${updatedRequest.applicantComment}\n`;
+      }
     }
 
     const firstApprovers = [...new Set(uniqueSteps.filter(s => s.order === 1).map(s => s.email))];

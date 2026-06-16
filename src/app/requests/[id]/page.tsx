@@ -67,13 +67,46 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             {getTypeLabel(reqData.type)}
           </div>
         </div>
-        {!CONFIRMATION_TYPES.includes(reqData.type) && (
+        {!CONFIRMATION_TYPES.includes(reqData.type) && reqData.type !== "FACILITY" && (
           <div className={styles.detailRow}>
             <div className={styles.detailLabel}>金額:</div>
             <div className={styles.detailValue}>
               {reqData.amount.toLocaleString()} 円
             </div>
           </div>
+        )}
+        {reqData.type === "FACILITY" && (
+          <>
+            <div className={styles.detailRow}>
+              <div className={styles.detailLabel}>利用施設:</div>
+              <div className={styles.detailValue} style={{ fontWeight: "bold", color: "#2563eb" }}>{reqData.facilityName}</div>
+            </div>
+            <div className={styles.detailRow}>
+              <div className={styles.detailLabel}>利用日程:</div>
+              <div className={styles.detailValue}>
+                {reqData.startDate ? new Date(reqData.startDate).toLocaleDateString("ja-JP") : "未定"} 〜{" "}
+                {reqData.endDate ? new Date(reqData.endDate).toLocaleDateString("ja-JP") : "未定"}
+              </div>
+            </div>
+            <div className={styles.detailRow}>
+              <div className={styles.detailLabel}>利用人数:</div>
+              <div className={styles.detailValue}>{reqData.peopleCount || 1} 名</div>
+            </div>
+            <div className={styles.detailRow}>
+              <div className={styles.detailLabel}>同伴者氏名:</div>
+              <div className={styles.detailValue}>{reqData.companions || "なし"}</div>
+            </div>
+            <div className={styles.detailRow}>
+              <div className={styles.detailLabel}>利用目的:</div>
+              <div className={styles.detailValue}>{reqData.purpose === "BUSINESS" ? "接待利用" : "私的利用"}</div>
+            </div>
+            {reqData.report && (
+              <div className={styles.detailRow} style={{ background: "#f0fdf4", padding: "0.75rem", borderRadius: "6px", border: "1px solid #bbf7d0" }}>
+                <div className={styles.detailLabel} style={{ color: "#166534" }}>📋 事後利用報告:</div>
+                <div className={styles.detailValue} style={{ color: "#166534", whiteSpace: "pre-wrap" }}>{reqData.report}</div>
+              </div>
+            )}
+          </>
         )}
         {reqData.type === "REFORM" && (
           <>
@@ -104,7 +137,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             {reqData.attachmentFile || "なし"}
           </div>
         </div>
-        {reqData.type === 'BUY' && reqData.applicantComment && (
+        {(reqData.type === 'BUY' || reqData.type === 'FACILITY') && reqData.applicantComment && (
           <div className={styles.detailRow}>
             <div className={styles.detailLabel}>申請者コメント:</div>
             <div className={styles.detailValue}>
