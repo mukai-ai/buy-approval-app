@@ -1,6 +1,5 @@
 import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 
@@ -17,36 +16,6 @@ export const authOptions: NextAuthOptions = {
         params: {
           prompt: "select_account",
         },
-      },
-    }),
-    CredentialsProvider({
-      id: "local-login",
-      name: "Local Login",
-      credentials: {
-        email: { label: "Email", type: "text" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email) return null;
-        const email = credentials.email.toLowerCase().trim();
-        
-        if (!email.endsWith("@tokyomf.co.jp")) {
-          throw new Error("Invalid domain. Use @tokyomf.co.jp");
-        }
-
-        let user = await prisma.user.findUnique({
-          where: { email },
-        });
-
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email,
-              name: email.split("@")[0],
-            },
-          });
-        }
-
-        return user;
       },
     }),
   ],
