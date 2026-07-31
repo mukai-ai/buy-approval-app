@@ -59,7 +59,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           companyName: companyName !== undefined ? companyName : existing.companyName,
           status: 'PENDING',
           resubmitCount: existing.resubmitCount + 1,
-          applicantComment: (existing.type === 'BUY' || existing.type === 'FACILITY') ? applicantComment : existing.applicantComment,
+          applicantComment: applicantComment !== undefined ? applicantComment : existing.applicantComment,
           // 福利厚生用
           facilityName: facilityName !== undefined ? facilityName : existing.facilityName,
           peopleCount: peopleCount !== undefined ? parseInt(peopleCount) : existing.peopleCount,

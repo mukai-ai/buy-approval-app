@@ -254,7 +254,7 @@ export async function POST(request: Request) {
           attachmentLink,
           attachmentFile: attachmentFile, // 直接テキストとして保存
           applicantEmail: session.user!.email!,
-          applicantComment: (type === 'BUY' || type === 'FACILITY') ? applicantComment : null,
+          applicantComment: applicantComment || null,
           // 福利厚生用
           facilityName,
           peopleCount,
@@ -297,7 +297,7 @@ export async function POST(request: Request) {
       specificInfoLine = `${getDateLabel(type)}: ${formattedDate}\n`;
     } else {
       specificInfoLine = `金額: ${amount.toLocaleString()}円\n`;
-      if (type === 'BUY' && applicantComment) {
+      if (applicantComment) {
         specificInfoLine += `申請者コメント: ${applicantComment}\n`;
       }
     }
