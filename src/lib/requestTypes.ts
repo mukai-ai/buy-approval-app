@@ -10,6 +10,7 @@ export const CONFIRMATION_TYPES = [
 export const REQUEST_TYPE_LABELS: Record<string, string> = {
   BUY: "買付承認",
   REFORM: "リフォーム承認",
+  OUTSOURCE: "外注承認",
   CONTRACT: "仕入契約確認表",
   PURCHASE_SETTLEMENT: "仕入決済確認表",
   BROKER_CONTRACT: "仲介契約確認表",

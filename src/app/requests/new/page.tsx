@@ -137,7 +137,7 @@ function NewRequestForm() {
         if (attachmentFile) formData.append("attachmentFile", attachmentFile);
         formData.append("applicantComment", applicantComment);
 
-        if (type === "REFORM") {
+        if (type === "REFORM" || type === "OUTSOURCE") {
           if (companyName) formData.append("companyName", companyName);
           if (startDate) formData.append("startDate", new Date(startDate).toISOString());
           if (endDate) formData.append("endDate", new Date(endDate).toISOString());
@@ -190,6 +190,7 @@ function NewRequestForm() {
             >
               <option value="BUY">買付承認</option>
               <option value="REFORM">リフォーム承認</option>
+              <option value="OUTSOURCE">外注承認</option>
               <option value="CONTRACT">仕入契約確認表</option>
               <option value="PURCHASE_SETTLEMENT">仕入決済確認表</option>
               <option value="BROKER_CONTRACT">仲介契約確認表</option>
@@ -214,7 +215,7 @@ function NewRequestForm() {
           </div>
         )}
 
-        {type === "REFORM" && (
+        {(type === "REFORM" || type === "OUTSOURCE") && (
           <>
             <div className={styles.formGroup}>
               <label className={styles.label}>業者名</label>
@@ -223,7 +224,7 @@ function NewRequestForm() {
                 className={styles.input}
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="例: 株式会社〇〇工務店"
+                placeholder="例: 株式会社〇〇"
               />
             </div>
             <div style={{ display: "flex", gap: "1rem" }}>

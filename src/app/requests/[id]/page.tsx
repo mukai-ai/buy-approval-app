@@ -116,7 +116,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             )}
           </>
         )}
-        {reqData.type === "REFORM" && (
+        {(reqData.type === "REFORM" || reqData.type === "OUTSOURCE") && (
           <>
             <div className={styles.detailRow}>
               <div className={styles.detailLabel}>業者名:</div>

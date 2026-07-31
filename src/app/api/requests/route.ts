@@ -228,6 +228,9 @@ export async function POST(request: Request) {
         flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 2 });
         flow.push({ email: 'otsuka@tokyomf.co.jp', order: 2 });
       }
+    } else if (type === 'OUTSOURCE') {
+      flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
+      flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 2 });
     } else if (CONFIRMATION_TYPES.includes(type)) {
       flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
       flow.push({ email: 'satou@tokyomf.co.jp', order: 2 });
