@@ -29,9 +29,9 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
   }
 
   // アクセス制限: 申請者・承認フロー関係者・総務のみ閲覧可能
-  const isAdmin = session.user.email === 'info@tokyomf.co.jp';
-  const isApplicantUser = reqData.applicantEmail === session.user.email;
-  const isApproverInFlow = reqData.approvalSteps.some((s: any) => s.approverEmail === session.user.email);
+  const isAdmin = session.user?.email === 'info@tokyomf.co.jp';
+  const isApplicantUser = reqData.applicantEmail === session.user?.email;
+  const isApproverInFlow = reqData.approvalSteps.some((s: any) => s.approverEmail === session.user?.email);
   if (!isAdmin && !isApplicantUser && !isApproverInFlow) {
     notFound();
   }
