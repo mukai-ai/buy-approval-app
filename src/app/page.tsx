@@ -183,7 +183,7 @@ export default function HomePage() {
           <h1 className={styles.title}>ダッシュボード</h1>
           <span style={{ fontSize: "0.75rem", color: "#94a3b8", paddingBottom: "3px" }}>v1.1</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div className={styles.headerActions}>
           <span>{session?.user?.email}</span>
           <button className={styles.buttonOutline} onClick={() => router.push("/requests/new")}>
             ＋ 新規申請
@@ -223,7 +223,7 @@ export default function HomePage() {
           </section>
 
           <section>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "1rem" }}>
+            <div className={styles.toolbar}>
               <h2 className={styles.sectionTitle} style={{ margin: 0, flex: 1 }}>過去の承認履歴</h2>
               <button 
                 className={styles.buttonOutline} 
@@ -235,8 +235,7 @@ export default function HomePage() {
               <input
                 type="text"
                 placeholder="キーワード検索..."
-                className={styles.input}
-                style={{ width: "180px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
+                className={`${styles.input} ${styles.toolbarSearch}`}
                 value={filterText}
                 onChange={(e) => setFilterText(e.target.value)}
               />
@@ -260,7 +259,7 @@ export default function HomePage() {
                     </span>
                   </div>
                   <h3 className={styles.cardTitle}>{step.request.title}</h3>
-                  <div className={styles.cardMeta} style={{ display: "flex", justifyContent: "space-between" }}>
+                  <div className={styles.cardMeta}>
                     <span>申請者: {step.request.applicantEmail}</span>
                     <span style={{ fontSize: "0.875rem", color: "#64748b" }}>
                       時刻: {new Date(step.updatedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}
@@ -299,7 +298,7 @@ export default function HomePage() {
         </div>
 
         <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "1rem" }}>
+          <div className={styles.toolbar}>
             <h2 className={styles.sectionTitle} style={{ margin: 0, flex: 1, fontFamily: '"Mochiy Pop P One", sans-serif' }}>自分の申請状況</h2>
             <button 
               className={styles.buttonOutline} 
@@ -311,8 +310,7 @@ export default function HomePage() {
             <input
               type="text"
               placeholder="キーワード検索..."
-              className={styles.input}
-              style={{ width: "150px", padding: "0.5rem", height: "auto", fontSize: "0.875rem" }}
+              className={`${styles.input} ${styles.toolbarSearch}`}
               value={myFilterText}
               onChange={(e) => setMyFilterText(e.target.value)}
             />

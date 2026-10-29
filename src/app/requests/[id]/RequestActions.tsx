@@ -208,7 +208,7 @@ export default function RequestActions({
                 placeholder="利用中に特に問題がなかったか、あるいは特記すべき利用結果を報告してください。"
               />
             </div>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
               <button type="submit" className={styles.button} style={{ backgroundColor: "#10b981", color: "white", border: "none" }} disabled={isSubmittingReport}>
                 {isSubmittingReport ? "送信中..." : "報告を提出する"}
               </button>
@@ -268,8 +268,8 @@ export default function RequestActions({
                     onChange={(e) => setCompanyName(e.target.value)}
                   />
                 </div>
-                <div style={{ display: "flex", gap: "1rem" }}>
-                  <div className={styles.formGroup} style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+                  <div className={styles.formGroup} style={{ flex: "1 1 200px" }}>
                     <label className={styles.label}>着工日</label>
                     <input
                       type="date"
@@ -278,7 +278,7 @@ export default function RequestActions({
                       onChange={(e) => setStartDate(e.target.value)}
                     />
                   </div>
-                  <div className={styles.formGroup} style={{ flex: 1 }}>
+                  <div className={styles.formGroup} style={{ flex: "1 1 200px" }}>
                     <label className={styles.label}>完了日</label>
                     <input
                       type="date"
@@ -328,7 +328,7 @@ export default function RequestActions({
               </div>
             )}
 
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem", flexWrap: "wrap" }}>
               <button type="submit" className={styles.button} disabled={isSubmitting}>
                 {isSubmitting ? "送信中..." : "再申請する"}
               </button>

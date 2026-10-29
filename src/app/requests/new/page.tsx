@@ -227,8 +227,8 @@ function NewRequestForm() {
                 placeholder="例: 株式会社〇〇"
               />
             </div>
-            <div style={{ display: "flex", gap: "1rem" }}>
-              <div className={styles.formGroup} style={{ flex: 1 }}>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              <div className={styles.formGroup} style={{ flex: "1 1 200px" }}>
                 <label className={styles.label}>着工日</label>
                 <input
                   type="date"
@@ -237,7 +237,7 @@ function NewRequestForm() {
                   onChange={(e) => setStartDate(e.target.value)}
                 />
               </div>
-              <div className={styles.formGroup} style={{ flex: 1 }}>
+              <div className={styles.formGroup} style={{ flex: "1 1 200px" }}>
                 <label className={styles.label}>完了日</label>
                 <input
                   type="date"
@@ -327,7 +327,7 @@ function NewRequestForm() {
             {!selectedFacility ? (
               <div>
                 <label className={styles.label} style={{ fontWeight: "bold", marginBottom: "1rem" }}>利用する施設を選択してください</label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(220px, 100%), 1fr))", gap: "1rem" }}>
                   {facilities.map((fac) => (
                     <div key={fac.id} className={styles.card} style={{ cursor: "default", padding: "1.25rem", background: "white", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
                       <h3 style={{ margin: "0 0 0.5rem 0", color: "#2563eb", fontSize: "1.1rem" }}>{fac.name}</h3>
@@ -360,8 +360,8 @@ function NewRequestForm() {
                   </button>
                 </div>
 
-                <div style={{ display: "flex", gap: "1rem" }} className={styles.formGroup}>
-                  <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }} className={styles.formGroup}>
+                  <div style={{ flex: "1 1 200px" }}>
                     <label className={styles.label}>利用開始日 *</label>
                     <input 
                       type="date" 
@@ -371,7 +371,7 @@ function NewRequestForm() {
                       onChange={(e) => setStartDate(e.target.value)} 
                     />
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: "1 1 200px" }}>
                     <label className={styles.label}>利用終了日 *</label>
                     <input 
                       type="date" 

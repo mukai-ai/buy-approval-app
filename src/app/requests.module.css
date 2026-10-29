@@ -116,3 +116,39 @@
 .stepCardPending { border-left: 4px solid #eab308; }
 .stepCardApproved { border-left: 4px solid #10b981; }
 .stepCardRejected { border-left: 4px solid #ef4444; }
+
+/* ===== スマホ幅 ===== */
+@media (max-width: 768px) {
+  .container {
+    margin: 1rem auto;
+    padding: 1.25rem 1rem;
+    border-radius: 0;
+  }
+
+  .title {
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .detailCard {
+    padding: 1rem;
+  }
+
+  .detailRow {
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  .detailLabel {
+    width: auto;
+    font-size: 0.85rem;
+  }
+
+  .buttonGroup {
+    flex-wrap: wrap;
+  }
+
+  .buttonGroup > * {
+    flex: 1 1 auto;
+  }
+}

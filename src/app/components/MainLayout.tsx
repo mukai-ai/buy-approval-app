@@ -31,11 +31,11 @@ export default function MainLayout({ children }: { children: ReactNode }) {
           <button className={styles.button} onClick={() => signIn("google", undefined, { prompt: "select_account" })}>
             Googleでログイン
           </button>
-          
+
           <div style={{ marginTop: "1.5rem", borderTop: "1px solid #e2e8f0", paddingTop: "1rem" }}>
             <p style={{ fontSize: "0.85rem", color: "#94a3b8" }}>開発環境用ログインはこちら</p>
-            <a 
-              href="/api/auth/signin" 
+            <a
+              href="/api/auth/signin"
               style={{ fontSize: "0.85rem", color: "#2563eb", textDecoration: "underline", fontWeight: "bold" }}
             >
               Local Login 画面へ
@@ -47,93 +47,34 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   }
 
   // ログイン済みの場合は、共通サイドバー ＋ 右側コンテンツを表示
+  // スマホ幅ではサイドバーを上部の横並びメニューに切り替える（dashboard.module.css の .shell 系）
   const isWelfare = pathname ? pathname.startsWith("/welfare") : false;
+  const navClass = (active: boolean) =>
+    `${styles.shellNavBtn} ${active ? styles.shellNavBtnActive : ""}`;
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "#f1f5f9" }}>
+    <div className={styles.shell}>
       {/* Sidebar (黄色枠固定) */}
-      <aside style={{ width: "260px", background: "white", borderRight: "1px solid #e2e8f0", padding: "2rem 1rem", flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-        <div>
-          <div style={{ fontWeight: "bold", color: "#1e293b", fontSize: "1.2rem", marginBottom: "2rem", paddingLeft: "0.5rem" }}>
-            システムメニュー
-          </div>
-          <nav style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <button 
-              onClick={() => router.push("/")}
-              style={{ 
-                textAlign: "left", 
-                padding: "0.85rem 1rem", 
-                background: !isWelfare ? "#eff6ff" : "transparent", 
-                color: !isWelfare ? "#2563eb" : "#64748b", 
-                borderRadius: "8px", 
-                fontWeight: "bold", 
-                border: "none", 
-                cursor: "pointer", 
-                fontSize: "0.95rem",
-                transition: "background 0.2s"
-              }}
-              onMouseOver={(e) => {
-                if (isWelfare) e.currentTarget.style.background = "#f1f5f9";
-              }}
-              onMouseOut={(e) => {
-                if (isWelfare) e.currentTarget.style.background = "transparent";
-              }}
-            >
-              🏠 ホーム(ダッシュボード)
-            </button>
-            <button 
-              onClick={() => router.push("/")}
-              style={{ 
-                textAlign: "left", 
-                padding: "0.85rem 1rem", 
-                background: !isWelfare ? "#eff6ff" : "transparent", 
-                color: !isWelfare ? "#2563eb" : "#64748b", 
-                borderRadius: "8px", 
-                fontWeight: "bold", 
-                border: "none", 
-                cursor: "pointer", 
-                fontSize: "0.95rem",
-                transition: "background 0.2s"
-              }}
-              onMouseOver={(e) => {
-                if (isWelfare) e.currentTarget.style.background = "#f1f5f9";
-              }}
-              onMouseOut={(e) => {
-                if (isWelfare) e.currentTarget.style.background = "transparent";
-              }}
-            >
-              ✅ 承認ワークフロー
-            </button>
-            <button 
-              onClick={() => router.push("/welfare")}
-              style={{ 
-                textAlign: "left", 
-                padding: "0.85rem 1rem", 
-                background: isWelfare ? "#eff6ff" : "transparent", 
-                color: isWelfare ? "#2563eb" : "#64748b", 
-                borderRadius: "8px", 
-                fontWeight: "bold", 
-                border: "none", 
-                cursor: "pointer", 
-                fontSize: "0.95rem", 
-                transition: "background 0.2s", 
-                lineHeight: "1.4" 
-              }}
-              onMouseOver={(e) => {
-                if (!isWelfare) e.currentTarget.style.background = "#f1f5f9";
-              }}
-              onMouseOut={(e) => {
-                if (!isWelfare) e.currentTarget.style.background = "transparent";
-              }}
-            >
-              🏢 福利厚生施設利用<br />　 ワークフロー
-            </button>
-          </nav>
-        </div>
+      <aside className={styles.shellSide}>
+        <div className={styles.shellSideTitle}>システムメニュー</div>
+        <nav className={styles.shellNav}>
+          <button onClick={() => router.push("/")} className={navClass(!isWelfare)}>
+            🏠 <span className={styles.shellNavLabel}>ホーム(ダッシュボード)</span>
+            <span className={styles.shellNavLabelShort}>ホーム</span>
+          </button>
+          <button onClick={() => router.push("/")} className={navClass(!isWelfare)}>
+            ✅ <span className={styles.shellNavLabel}>承認ワークフロー</span>
+            <span className={styles.shellNavLabelShort}>承認</span>
+          </button>
+          <button onClick={() => router.push("/welfare")} className={navClass(isWelfare)}>
+            🏢 <span className={styles.shellNavLabel}>福利厚生施設利用<br />　 ワークフロー</span>
+            <span className={styles.shellNavLabelShort}>福利厚生</span>
+          </button>
+        </nav>
       </aside>
 
       {/* Main Content (青枠部分) */}
-      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+      <div className={styles.shellMain}>
         {children}
       </div>
     </div>

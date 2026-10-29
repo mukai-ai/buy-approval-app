@@ -12,3 +12,15 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
 }
+
+/* カレンダー（react-big-calendar）のツールバーをスマホで折り返す */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .rbc-toolbar .rbc-toolbar-label {
+    order: -1;
+    font-weight: bold;
+  }
+}

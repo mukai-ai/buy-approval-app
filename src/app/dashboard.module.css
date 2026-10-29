@@ -345,3 +345,218 @@
   background: #1d4ed8;
   color: #fff;
 }
+
+/* ===== 共通レイアウト（MainLayout） ===== */
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+.shellSide {
+  width: 260px;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  padding: 2rem 1rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.shellSideTitle {
+  font-weight: bold;
+  color: #1e293b;
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  padding-left: 0.5rem;
+}
+
+.shellNav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shellNavBtn {
+  text-align: left;
+  padding: 0.85rem 1rem;
+  background: transparent;
+  color: #64748b;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  transition: background 0.2s;
+}
+
+.shellNavBtn:hover {
+  background: #f1f5f9;
+}
+
+.shellNavBtnActive,
+.shellNavBtnActive:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.shellNavLabelShort {
+  display: none;
+}
+
+.shellMain {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* セクション見出し＋CSV出力＋検索の横並び */
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.toolbarSearch {
+  width: 180px;
+  padding: 0.5rem;
+  height: auto;
+  font-size: 0.875rem;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* ===== スマホ幅 ===== */
+@media (max-width: 768px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  /* サイドバー → 画面上部に固定の横並びメニュー */
+  .shellSide {
+    width: 100%;
+    padding: 0.5rem;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .shellSideTitle {
+    display: none;
+  }
+
+  .shellNav {
+    flex-direction: row;
+    gap: 0.25rem;
+  }
+
+  .shellNavBtn {
+    flex: 1;
+    text-align: center;
+    padding: 0.6rem 0.25rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .shellNavLabel {
+    display: none;
+  }
+
+  .shellNavLabelShort {
+    display: inline;
+  }
+
+  .shellMain {
+    overflow-y: visible;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .headerActions {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .headerActions > span {
+    width: 100%;
+    font-size: 0.8rem;
+    color: #64748b;
+    word-break: break-all;
+  }
+
+  .headerActions > button {
+    flex: 1;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .dashboardGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .toolbar > h2 {
+    flex-basis: 100% !important;
+  }
+
+  .toolbarSearch {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .cardMeta {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .facilityTabs {
+    flex-wrap: wrap;
+  }
+
+  .facilityTab {
+    flex: 1 1 40%;
+    padding: 0.6rem 0.5rem;
+  }
+
+  .loginContainer {
+    padding: 1rem;
+  }
+
+  .loginCard {
+    padding: 2.5rem 1.5rem;
+  }
+}

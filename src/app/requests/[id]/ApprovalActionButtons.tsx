@@ -51,7 +51,7 @@ export default function ActionButtons({ requestId }: { requestId: string }) {
         onChange={(e) => setComment(e.target.value)}
         style={{ marginBottom: "1rem" }}
       />
-      <div style={{ display: "flex", gap: "1rem" }}>
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
         <button className={styles.buttonApprove} onClick={() => handleAction("APPROVED")} disabled={loading}>
           {loading ? "処理中..." : "✓ 承認する"}
         </button>

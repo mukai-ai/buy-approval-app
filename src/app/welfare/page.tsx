@@ -668,7 +668,8 @@ export default function WelfarePage() {
     ));
 
   const thStyle = {
-    width: "150px",
+    width: "30%",
+    maxWidth: "150px",
     textAlign: "left" as const,
     padding: "0.75rem",
     borderBottom: "1px solid rgba(0,0,0,0.05)",
@@ -765,7 +766,7 @@ export default function WelfarePage() {
         <div style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem" }}>
           <h1 className={styles.title}>福利厚生施設 利用承認ワークフロー</h1>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div className={styles.headerActions}>
           <span style={{ fontSize: "0.875rem", color: "#64748b" }}>
             {userEmail}
             {role !== "employee" && (
@@ -797,7 +798,7 @@ export default function WelfarePage() {
         {activeTab === "employee" && (
           <div>
             <h2 className={styles.sectionTitle} style={{ marginBottom: "1rem" }}>施設一覧</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(280px, 100%), 1fr))", gap: "1.5rem", marginBottom: "2.5rem" }}>
               {facilities.map((fac) => (
                 <div key={fac.id} className={styles.card} style={{ padding: "1.5rem", background: "white", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "220px" }}>
                   <div>
@@ -828,7 +829,7 @@ export default function WelfarePage() {
             {myRequests.length === 0 ? (
               <p style={{ color: "#64748b" }}>申請履歴はありません。</p>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.5rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(320px, 100%), 1fr))", gap: "1.5rem" }}>
                 {myRequests.map((req) => (
                   <div
                     key={req.id}
@@ -1016,7 +1017,7 @@ export default function WelfarePage() {
                         <span style={{ fontSize: "0.875rem", color: "#64748b", fontWeight: "bold" }}>{step.request.facilityName}</span>
                       </div>
                       <h3 className={styles.cardTitle}>{step.request.title}</h3>
-                      <div className={styles.cardMeta} style={{ display: "flex", justifyContent: "space-between" }}>
+                      <div className={styles.cardMeta}>
                         <span>申請者: {step.request.applicantEmail}</span>
                         <span style={{ fontSize: "0.875rem", color: "#64748b" }}>時刻: {new Date(step.updatedAt).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" })}</span>
                       </div>
