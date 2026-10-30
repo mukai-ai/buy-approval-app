@@ -5,6 +5,7 @@ import styles from "../../requests.module.css";
 import Link from "next/link";
 import ApprovalActionButtons from "./ApprovalActionButtons";
 import RequestActions from "./RequestActions";
+import DrivePathText from "../../components/DrivePathText";
 import { notFound } from "next/navigation";
 import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
 
@@ -111,7 +112,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
             {reqData.report && (
               <div className={styles.detailRow} style={{ background: "#f0fdf4", padding: "0.75rem", borderRadius: "6px", border: "1px solid #bbf7d0" }}>
                 <div className={styles.detailLabel} style={{ color: "#166534" }}>📋 事後利用報告:</div>
-                <div className={styles.detailValue} style={{ color: "#166534", whiteSpace: "pre-wrap" }}>{reqData.report}</div>
+                <div className={styles.detailValue} style={{ color: "#166534", whiteSpace: "pre-wrap" }}><DrivePathText text={reqData.report} /></div>
               </div>
             )}
           </>
@@ -142,14 +143,14 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
         <div className={styles.detailRow}>
           <div className={styles.detailLabel}>{CONFIRMATION_TYPES.includes(reqData.type) ? "添付資料のファイルorフォルダのパス:" : "社内サーバーのファイルパス等:"}</div>
           <div className={styles.detailValue}>
-            {reqData.attachmentFile || "なし"}
+            {reqData.attachmentFile ? <DrivePathText text={reqData.attachmentFile} /> : "なし"}
           </div>
         </div>
         {reqData.applicantComment && (
           <div className={styles.detailRow}>
             <div className={styles.detailLabel}>申請者コメント:</div>
             <div className={styles.detailValue}>
-              {reqData.applicantComment}
+              <DrivePathText text={reqData.applicantComment} />
             </div>
           </div>
         )}
@@ -215,7 +216,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-all"
                   }}>
-                    コメント: {step.comment}
+                    コメント: <DrivePathText text={step.comment} />
                   </div>
                 )}
               </div>
