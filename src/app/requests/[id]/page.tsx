@@ -9,7 +9,8 @@ import DrivePathText from "../../components/DrivePathText";
 import { notFound } from "next/navigation";
 import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
 
-export default async function RequestDetailPage({ params }: { params: { id: string } }) {
+export default async function RequestDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return (
@@ -21,7 +22,7 @@ export default async function RequestDetailPage({ params }: { params: { id: stri
   }
 
   const reqData = await prisma.request.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { approvalSteps: { orderBy: [{ round: "asc" }, { stepOrder: "asc" }] } },
   });
 

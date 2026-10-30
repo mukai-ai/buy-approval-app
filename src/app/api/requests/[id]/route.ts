@@ -7,14 +7,14 @@ export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const requestId = params.id;
+  const { id: requestId } = await params;
 
   try {
     const reqData = await prisma.request.findUnique({

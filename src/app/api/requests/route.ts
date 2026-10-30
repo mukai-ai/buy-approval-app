@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendNotificationEmail } from '@/lib/mailer';
 import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
+import { buildApprovalFlow } from '@/lib/approvalFlow';
+import { getAppBaseUrl } from '@/lib/appUrl';
+
+// ページ番号・件数は正の整数に丸め、1回に取れる件数に上限を設ける
+const toPositiveInt = (value: string | null, fallback: number, max = Number.MAX_SAFE_INTEGER) => {
+  const n = parseInt(value || '', 10);
+  return Number.isFinite(n) && n > 0 ? Math.min(n, max) : fallback;
+};
+const MAX_PAGE_SIZE = 100;
 
 export const dynamic = 'force-dynamic';
 
@@ -16,14 +24,14 @@ export async function GET(request: Request) {
   const email = session.user.email;
 
   const { searchParams } = new URL(request.url);
-  const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '5');
+  const page = toPositiveInt(searchParams.get('page'), 1);
+  const limit = toPositiveInt(searchParams.get('limit'), 5, MAX_PAGE_SIZE);
   const all = searchParams.get('all') === 'true';
   const search = searchParams.get('search') || '';
   const category = searchParams.get('category') || 'all'; // 'workflow' | 'facility' | 'all'
   
-  const myPage = parseInt(searchParams.get('myPage') || '1');
-  const myLimit = parseInt(searchParams.get('myLimit') || '5');
+  const myPage = toPositiveInt(searchParams.get('myPage'), 1);
+  const myLimit = toPositiveInt(searchParams.get('myLimit'), 5, MAX_PAGE_SIZE);
   const mySearch = searchParams.get('mySearch') || '';
   
   const skip = (page - 1) * limit;
@@ -209,40 +217,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Require title and type' }, { status: 400 });
     }
 
-    // 承認フロー要件の決定
-    let flow: { email: string; order: number }[] = [];
+    if (Number.isNaN(amount)) {
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+    }
 
-    if (type === 'BUY') {
-      if (amount < 30000000) {
-        flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
-      } else {
-        flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
-        flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 2 });
-        flow.push({ email: 'otsuka@tokyomf.co.jp', order: 2 });
-      }
-    } else if (type === 'REFORM') {
-      if (amount < 15000000) {
-        flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 1 });
-      } else {
-        flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 1 });
-        flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 2 });
-        flow.push({ email: 'otsuka@tokyomf.co.jp', order: 2 });
-      }
-    } else if (type === 'OUTSOURCE') {
-      flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
-      flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 2 });
-    } else if (CONFIRMATION_TYPES.includes(type)) {
-      flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 1 });
-      flow.push({ email: 'satou@tokyomf.co.jp', order: 2 });
-      flow.push({ email: 'yoshitomi@tokyomf.co.jp', order: 3 });
-      flow.push({ email: 'otsuka@tokyomf.co.jp', order: 4 });
-    } else if (type === 'FACILITY') {
-      flow.push({ email: 'info@tokyomf.co.jp', order: 1 });
-      if (purpose === 'BUSINESS') {
-        flow.push({ email: 'koyanagi@tokyomf.co.jp', order: 2 });
-      } else {
-        flow.push({ email: 'satou@tokyomf.co.jp', order: 2 });
-      }
+    // 承認フロー要件の決定
+    const flow = buildApprovalFlow(type, amount, purpose);
+    if (!flow) {
+      return NextResponse.json({ error: 'Unknown request type' }, { status: 400 });
     }
 
     const newRequest = await prisma.$transaction(async (tx: any) => {
@@ -282,9 +264,7 @@ export async function POST(request: Request) {
 
     // 最初のステップ (order === 1) の全員へ通知
     const firstApprovers = flow.filter(s => s.order === 1);
-    const host = headers().get('host');
-    const protocol = host?.includes('localhost') ? 'http' : 'https';
-    const baseUrl = `${protocol}://${host}`;
+    const baseUrl = await getAppBaseUrl();
     const url = `${baseUrl}/requests/${newRequest.id}`;
     
     let specificInfoLine = '';

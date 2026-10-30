@@ -17,6 +17,12 @@ type RequestType = {
   resubmitCount: number;
 };
 
+// CSVの1セル。= + - @ で始まる値はExcelが数式として実行するため、先頭に ' を付けて文字列にする
+const csvCell = (value: unknown) => {
+  const text = String(value ?? "").replace(/^([=+\-@\t\r])/, "'$1");
+  return `"${text.replace(/"/g, '""')}"`;
+};
+
 type ApprovalStepType = {
   id: string;
   status: string;
@@ -92,13 +98,13 @@ export default function HomePage() {
       
       past.forEach((step: any) => {
         const row = [
-          `"${step.request.title.replace(/"/g, '""')}"`,
-          `"${step.request.applicantEmail}"`,
-          `"${getTypeLabel(step.request.type).replace("承認", "")}"`,
+          csvCell(step.request.title),
+          csvCell(step.request.applicantEmail),
+          csvCell(getTypeLabel(step.request.type).replace("承認", "")),
           step.request.amount,
-          `"${step.status === 'APPROVED' ? '承認' : '却下'}"`,
-          `"${new Date(step.updatedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}"`,
-          `"${(step.comment || '').replace(/"/g, '""')}"`
+          csvCell(step.status === 'APPROVED' ? '承認' : '却下'),
+          csvCell(new Date(step.updatedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })),
+          csvCell(step.comment)
         ];
         csvContent += row.join(",") + "\n";
       });
@@ -139,11 +145,11 @@ export default function HomePage() {
       
       my.forEach((req: any) => {
         const row = [
-          `"${req.title.replace(/"/g, '""')}"`,
-          `"${getTypeLabel(req.type)}"`,
+          csvCell(req.title),
+          csvCell(getTypeLabel(req.type)),
           req.amount,
-          `"${req.status === 'APPROVED' ? '承認済' : req.status === 'REJECTED' ? '却下' : '審査中'}"`,
-          `"${new Date(req.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}"`
+          csvCell(req.status === 'APPROVED' ? '承認済' : req.status === 'REJECTED' ? '却下' : '審査中'),
+          csvCell(new Date(req.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }))
         ];
         csvContent += row.join(",") + "\n";
       });

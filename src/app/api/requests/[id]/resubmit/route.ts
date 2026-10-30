@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendNotificationEmail } from '@/lib/mailer';
 import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
+import { buildApprovalFlow } from '@/lib/approvalFlow';
+import { getAppBaseUrl } from '@/lib/appUrl';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const requestId = params.id;
+  const { id: requestId } = await params;
 
   try {
     const existing = await prisma.request.findUnique({
@@ -35,15 +36,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const nextRound = existing.resubmitCount + 2; // 現在のラウンド+1（再申請=2回目以降）
 
-    // 既存の承認フローからステップ構成を復元（重複なし）
-    const uniqueSteps: { email: string; order: number }[] = [];
-    const seen = new Set<string>();
-    for (const step of existing.approvalSteps) {
-      const key = `${step.approverEmail}-${step.stepOrder}`;
-      if (!seen.has(key)) {
-        uniqueSteps.push({ email: step.approverEmail, order: step.stepOrder });
-        seen.add(key);
-      }
+    // 再申請後の金額・利用目的で承認フローを組み直す
+    // （以前は初回のフローを使い回していたため、金額を上げても承認者が増えなかった）
+    const nextAmount = amount !== undefined ? parseFloat(amount) : existing.amount;
+    const nextPurpose = purpose !== undefined ? purpose : existing.purpose;
+    if (Number.isNaN(nextAmount)) {
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
+    }
+    const uniqueSteps = buildApprovalFlow(existing.type, nextAmount, nextPurpose);
+    if (!uniqueSteps) {
+      return NextResponse.json({ error: 'Unknown request type' }, { status: 400 });
     }
 
     await prisma.$transaction(async (tx: any) => {
@@ -55,7 +57,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           startDate: startDate ? new Date(startDate) : existing.startDate,
           endDate: endDate ? new Date(endDate) : existing.endDate,
           attachmentFile: attachmentFile !== undefined ? attachmentFile : existing.attachmentFile,
-          amount: amount !== undefined ? parseFloat(amount) : existing.amount,
+          amount: nextAmount,
           companyName: companyName !== undefined ? companyName : existing.companyName,
           status: 'PENDING',
           resubmitCount: existing.resubmitCount + 1,
@@ -64,7 +66,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           facilityName: facilityName !== undefined ? facilityName : existing.facilityName,
           peopleCount: peopleCount !== undefined ? parseInt(peopleCount) : existing.peopleCount,
           companions: companions !== undefined ? companions : existing.companions,
-          purpose: purpose !== undefined ? purpose : existing.purpose,
+          purpose: nextPurpose,
         }
       });
 
@@ -82,9 +84,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
 
     // 第1承認者へメール通知
-    const host = headers().get('host');
-    const protocol = host?.includes('localhost') ? 'http' : 'https';
-    const baseUrl = `${protocol}://${host}`;
+    const baseUrl = await getAppBaseUrl();
     const url = `${baseUrl}/requests/${requestId}`;
 
     const updatedRequest = await prisma.request.findUnique({ where: { id: requestId } });

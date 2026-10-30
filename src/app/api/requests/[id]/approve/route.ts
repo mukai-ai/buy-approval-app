@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
 import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendNotificationEmail } from '@/lib/mailer';
 import { CONFIRMATION_TYPES, getTypeLabel, getDateLabel } from "@/lib/requestTypes";
+import { getAppBaseUrl } from '@/lib/appUrl';
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const requestId = params.id;
+  const { id: requestId } = await params;
   const { action, comment, targetStepId } = await req.json(); // 'APPROVE' | 'REJECT'
   const email = session.user.email;
 
@@ -112,11 +112,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
 
     // 2. メールの送信処理 (トランザクション完了後)
-    // ホストヘッダーから基準URLを取得（環境変数に頼らない方法）
-    const host = headers().get('host');
-    console.log('DEBUG: Approve route host header:', host);
-    const protocol = host?.includes('localhost') ? 'http' : 'https';
-    const baseUrl = `${protocol}://${host}`;
+    const baseUrl = await getAppBaseUrl();
     const now = new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
     const url = `${baseUrl}/requests/${requestId}`;
 

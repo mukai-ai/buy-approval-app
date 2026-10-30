@@ -3,19 +3,20 @@ import { getServerSession } from 'next-auth';
 import prisma from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { sendNotificationEmail } from '@/lib/mailer';
+import { getAppBaseUrl } from '@/lib/appUrl';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const requestId = params.id;
+  const { id: requestId } = await params;
   const { report } = await req.json();
 
-  if (!report || !report.trim()) {
+  if (typeof report !== 'string' || !report.trim()) {
     return NextResponse.json({ error: 'Report content is required' }, { status: 400 });
   }
 
@@ -49,7 +50,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     await sendNotificationEmail(
       'info@tokyomf.co.jp',
       `【利用報告】施設利用の事後報告が提出されました：${existing.title}`,
-      `${session.user.email}さんから「${existing.facilityName}」の利用事後報告が提出されました。\n\n報告内容:\n${report}\n\n対象申請URL: ${req.url.split('/api')[0]}/requests/${requestId}`,
+      `${session.user.email}さんから「${existing.facilityName}」の利用事後報告が提出されました。\n\n報告内容:\n${report}\n\n対象申請URL: ${await getAppBaseUrl()}/requests/${requestId}`,
       session.user.name || session.user.email || undefined,
       session.user.email || undefined
     );
