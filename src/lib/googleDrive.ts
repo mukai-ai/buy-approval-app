@@ -8,7 +8,7 @@ const DRIVE_API = "https://www.googleapis.com/drive/v3";
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 
 export type ResolveResult =
-  | { status: "ok"; url: string; isFolder: boolean }
+  | { status: "ok"; url: string; isFolder: boolean; ambiguous?: boolean }
   | { status: "not_found" }
   | { status: "need_login" }
   | { status: "error" };
@@ -84,7 +84,10 @@ async function driveGet(token: string, path: string, params: Record<string, stri
 const sameName = (a: string, b: string) => a.normalize("NFC").trim() === b.normalize("NFC").trim();
 const escapeQ = (s: string) => s.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 
-async function findByPath(token: string, parsed: ParsedDrivePath): Promise<DriveFile | null> {
+async function findByPath(
+  token: string,
+  parsed: ParsedDrivePath
+): Promise<{ file: DriveFile; ambiguous: boolean } | null> {
   const segments = parsed.segments;
   const leafName = segments[segments.length - 1];
 
@@ -93,7 +96,7 @@ async function findByPath(token: string, parsed: ParsedDrivePath): Promise<Drive
     q: `name = '${escapeQ(leafName)}' and trashed = false`,
     corpora: parsed.kind === "shared" ? "allDrives" : "user",
     includeItemsFromAllDrives: "true",
-    pageSize: "20",
+    pageSize: "100",
     fields: "files(id,name,parents,driveId,mimeType,webViewLink)",
   });
   const candidates: DriveFile[] = list?.files || [];
@@ -112,6 +115,7 @@ async function findByPath(token: string, parsed: ParsedDrivePath): Promise<Drive
     if (!myDriveRootId) return null;
   }
 
+  const matches: DriveFile[] = [];
   for (const candidate of candidates) {
     let cur: DriveFile | null = candidate;
     for (let i = segments.length - 2; i >= 0 && cur; i--) {
@@ -123,17 +127,19 @@ async function findByPath(token: string, parsed: ParsedDrivePath): Promise<Drive
 
     const topParent = cur.parents?.[0];
     if (parsed.kind === "my") {
-      if (topParent === myDriveRootId) return candidate;
+      if (topParent === myDriveRootId) return { file: candidate, ambiguous: false };
       continue;
     }
 
-    // 共有ドライブ直下にあり、共有ドライブ名も一致するか
-    if (!cur.driveId || topParent !== cur.driveId) continue;
-    const driveRoot = await getFile(cur.driveId);
-    if (driveRoot && !sameName(driveRoot.name, parsed.driveName)) continue;
-    return candidate;
+    // 共有ドライブ直下にあるか。
+    // 共有ドライブ名は drive.metadata.readonly では取れない（ルートの名前は「ドライブ」になる）ため照合しない
+    if (cur.driveId && topParent === cur.driveId) matches.push(candidate);
   }
-  return null;
+
+  if (matches.length === 0) return null;
+  // 別々の共有ドライブに同じパスがあると、どれがパスの共有ドライブか判別できない
+  const ambiguous = new Set(matches.map((f) => f.driveId)).size > 1;
+  return { file: matches[0], ambiguous };
 }
 
 // 同じ人が同じパスを何度も開いたときにDrive APIを叩きすぎないよう、結果を少しの間覚えておく
@@ -150,18 +156,26 @@ export async function resolveDrivePath(email: string, rawPath: string): Promise<
 
   try {
     const token = await getAccessToken(email);
-    const file = await findByPath(token, parsed);
-    const result: ResolveResult = file
-      ? {
-          status: "ok",
-          isFolder: file.mimeType === FOLDER_MIME,
-          url:
-            file.webViewLink ||
-            (file.mimeType === FOLDER_MIME
-              ? `https://drive.google.com/drive/folders/${file.id}`
-              : `https://drive.google.com/file/d/${file.id}/view`),
-        }
-      : { status: "not_found" };
+    const found = await findByPath(token, parsed);
+    const file = found?.file;
+    const result: ResolveResult = !file
+      ? { status: "not_found" }
+      : found.ambiguous
+        ? {
+            status: "ok",
+            isFolder: file.mimeType === FOLDER_MIME,
+            ambiguous: true,
+            url: `https://drive.google.com/drive/search?q=${encodeURIComponent(file.name)}`,
+          }
+        : {
+            status: "ok",
+            isFolder: file.mimeType === FOLDER_MIME,
+            url:
+              file.webViewLink ||
+              (file.mimeType === FOLDER_MIME
+                ? `https://drive.google.com/drive/folders/${file.id}`
+                : `https://drive.google.com/file/d/${file.id}/view`),
+          };
     resultCache.set(key, { at: Date.now(), result });
     return result;
   } catch (error) {

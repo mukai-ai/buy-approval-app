@@ -6,7 +6,7 @@ import { DRIVE_PATH_PATTERN, cleanDrivePath, parseDrivePath } from "@/lib/driveP
 
 type Resolved =
   | { status: "loading" }
-  | { status: "ok"; url: string; isFolder: boolean }
+  | { status: "ok"; url: string; isFolder: boolean; ambiguous?: boolean }
   | { status: "not_found" | "need_login" | "error" };
 
 // 1つのパスの横に「Driveで開く」リンクを出す（パスの文字はそのまま残す）
@@ -41,7 +41,11 @@ function DrivePathLink({ path }: { path: string }) {
   if (resolved.status === "ok") {
     return (
       <a href={resolved.url} target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe" }}>
-        {resolved.isFolder ? "📁 Driveでフォルダを開く" : "📄 Driveでファイルを開く"}
+        {resolved.ambiguous
+          ? "🔍 Driveで探す（同名の候補が複数）"
+          : resolved.isFolder
+            ? "📁 Driveでフォルダを開く"
+            : "📄 Driveでファイルを開く"}
       </a>
     );
   }
