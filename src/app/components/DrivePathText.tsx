@@ -59,8 +59,26 @@ function DrivePathLink({ path }: { path: string }) {
   return <span style={{ ...linkStyle, color: "#94a3b8", padding: "0.35rem 0", fontWeight: 400 }}>（Drive上で見つかりませんでした）</span>;
 }
 
-// 文中の「G:\共有ドライブ\...」をパス＋Driveリンクに置き換えて表示する
+// スマホ（幅768px以下、またはタッチ操作のみの端末）かどうか。PCではG:ドライブのパスがそのまま使えるのでリンクは出さない
+const MOBILE_QUERY = "(max-width: 768px), (hover: none) and (pointer: coarse)";
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return isMobile;
+}
+
+// 文中の「G:\共有ドライブ\...」をパス＋Driveリンクに置き換えて表示する（リンクはスマホのみ）
 export default function DrivePathText({ text }: { text: string }) {
+  const isMobile = useIsMobile();
+  if (!isMobile) return <>{text}</>;
+
   const nodes: React.ReactNode[] = [];
   let last = 0;
   for (const match of text.matchAll(DRIVE_PATH_PATTERN)) {
